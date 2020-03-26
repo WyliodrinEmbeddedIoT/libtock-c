@@ -1,11 +1,11 @@
 #include "jerry_library.h"
-#include <stdio.h>
+#include <stdlib.h>
 
 static jerry_value_t console_log_handler (const jerry_value_t function_object,
                const jerry_value_t function_this,
                const jerry_value_t arguments[],
                const jerry_length_t arguments_count)
-{
+{ 
     if (arguments_count > 0)
     {
         char *str = NULL;

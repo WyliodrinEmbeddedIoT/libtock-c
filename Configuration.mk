@@ -21,8 +21,8 @@ READELF := -readelf
 SIZE := -size
 
 # Set default region sizes
-STACK_SIZE       ?= 2048
-APP_HEAP_SIZE    ?= 24000
+STACK_SIZE       ?= 10240
+APP_HEAP_SIZE    ?= 20000
 KERNEL_HEAP_SIZE ?= 1024
 
 # PACKAGE_NAME is used to identify the application for IPC and for error reporting
