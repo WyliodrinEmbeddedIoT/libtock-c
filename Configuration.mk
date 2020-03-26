@@ -22,7 +22,7 @@ SIZE := -size
 
 # Set default region sizes
 STACK_SIZE       ?= 2048
-APP_HEAP_SIZE    ?= 1024
+APP_HEAP_SIZE    ?= 24000
 KERNEL_HEAP_SIZE ?= 1024
 
 # PACKAGE_NAME is used to identify the application for IPC and for error reporting

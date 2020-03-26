@@ -16,6 +16,7 @@ static void nop(
   void* d __attribute__((unused))) {}
 
 int main(void) {
-  putnstr_async(hello, sizeof(hello), nop, NULL);
+  //putnstr_async(hello, sizeof(hello), nop, NULL);
+  printf ("Failed to add the 'print' property\n");
   return 0;
 }
