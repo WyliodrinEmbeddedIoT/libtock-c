@@ -5,6 +5,7 @@
 #include "jerry_led.h"
 #include <string.h>
 #include <stdlib.h>
+#include <timer.h>
 
 double jerry_port_get_current_time (void){
     return 0;
@@ -71,6 +72,15 @@ static jerry_value_t require_handler (const jerry_value_t function_object,
     return ret_val;
 }
 
+static jerry_value_t sleep_handler (const jerry_value_t function_object,
+               const jerry_value_t function_this,
+               const jerry_value_t arguments[],
+               const jerry_length_t arguments_count)
+{
+    delay_ms(1000);
+    return jerry_create_undefined();
+}
+
 
 void jerry_setup(){
     jerry_init(JERRY_INIT_EMPTY);
@@ -81,6 +91,12 @@ void jerry_setup(){
     {
         jerry_value_t property_name_require = jerry_create_string ((const jerry_char_t *) "require");
         jerry_value_t property_value_func = jerry_create_external_function (require_handler);
+        jerry_release_value (jerry_set_property (global_object, property_name_require, property_value_func));
+        jerry_release_value (property_name_require);
+        jerry_release_value (property_value_func);
+
+        property_name_require = jerry_create_string ((const jerry_char_t *) "sleep");
+        property_value_func = jerry_create_external_function (sleep_handler);
         jerry_release_value (jerry_set_property (global_object, property_name_require, property_value_func));
         jerry_release_value (property_name_require);
         jerry_release_value (property_value_func);

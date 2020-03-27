@@ -5,7 +5,7 @@ int main (void)
 {
   jerry_setup();
 
-  jerry_execute ("var a = require ('led'); for (var i=0; i<3; i++) a.on(i);");
+  jerry_execute ("var led = require ('led'); for (var i=0; i<led.count(); i=i+1) {led.toggle(i);sleep();led.toggle (i);};");
 
   jerry_release();
   return 0;
