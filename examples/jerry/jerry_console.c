@@ -1,5 +1,4 @@
-#include "jerry_library.h"
-#include <stdlib.h>
+#include "jerry_console.h"
 
 static jerry_value_t console_log_handler (const jerry_value_t function_object,
                const jerry_value_t function_this,

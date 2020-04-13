@@ -14,15 +14,17 @@ static void button_callback(int btn_num,
                             int val,
                             __attribute__ ((unused)) int arg2,
                             __attribute__ ((unused)) void *ud) {
-  if (val == 1) {
-    led_toggle(btn_num);
-  }
+  // if (val == 1) {
+  //   led_toggle(btn_num);
+  // }
+  printf ("called\n"); printf ("pin: %d\n", btn_num); printf ("val: %d\n", val);
 }
 
 int main(void) {
   button_subscribe(button_callback, NULL);
 
   // Enable interrupts on each button.
+  printf ("button\n");
   int count = button_count();
   for (int i = 0; i < count; i++) {
     button_enable_interrupt(i);

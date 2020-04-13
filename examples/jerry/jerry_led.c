@@ -1,6 +1,4 @@
-#include "jerryscript.h"
-#include "led.h"
-#include <stdlib.h>
+#include "jerry_led.h"
 
 static jerry_value_t led_on_handler (const jerry_value_t function_object,
                const jerry_value_t function_this,

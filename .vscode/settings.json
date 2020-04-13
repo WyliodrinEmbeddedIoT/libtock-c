@@ -1,5 +1,16 @@
 {
     "files.associations": {
-        "jcontext.h": "c"
+        "jcontext.h": "c",
+        "__hash_table": "c",
+        "__split_buffer": "c",
+        "atomic": "c",
+        "forward_list": "c",
+        "ios": "c",
+        "string": "c",
+        "system_error": "c",
+        "unordered_map": "c",
+        "vector": "c",
+        "jerry_gpio.h": "c",
+        "alarm.h": "c"
     }
 }
