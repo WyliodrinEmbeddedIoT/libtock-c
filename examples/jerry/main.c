@@ -18,7 +18,7 @@ int main (void)
   jerry_execute ("var b = require ('button'); var Button = b.Button; var btn = new Button (0, b.EDGE_BOTH); btn.watch(function (value){console.log (value);});");
   while (1){yield();}
 
-//var led = require ('led'); led.count (); var Led = led.Led; var l = new Led (pin); l.on(); l.off(); l.toggle();
+  //var led = require ('led'); led.count (); var Led = led.Led; var l = new Led (pin); l.on(); l.off(); l.toggle();
 
   // jerry_execute ("var gpio = require ('gpio');\
   //   console.log (gpio.enable_input(0, 0)); while (1){console.log (gpio.read(0)); sleep();};");
