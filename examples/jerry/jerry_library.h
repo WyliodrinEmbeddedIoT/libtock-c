@@ -3,6 +3,9 @@
 
 #include "jerryscript.h"
 #define JERRY_MAX_STRING 500
+#define EDGE_RISING  0
+#define EDGE_FALLING 1
+#define EDGE_BOTH    2
 
 void jerry_setup ();
 void jerry_execute (const char *source);

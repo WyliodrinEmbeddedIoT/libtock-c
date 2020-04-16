@@ -96,8 +96,6 @@ static void timeout_callback(__attribute__ ((unused)) int now,
     }
 }
 
-
-
 static jerry_value_t timeout_handler (const jerry_value_t function_object,
                const jerry_value_t function_this,
                const jerry_value_t arguments[],
@@ -160,12 +158,12 @@ void jerry_setup(){
         jerry_release_value (property_name_require);
         jerry_release_value (property_value_func);
 
-
         jerry_value_t property_name_console = jerry_create_string ((const jerry_char_t *) "console");
         jerry_value_t console = setup_console();
         jerry_release_value (jerry_set_property (global_object, property_name_console, console));
         jerry_release_value (property_name_console);
         jerry_release_value (console);
+
     }
 	jerry_release_value (global_object);
 }
