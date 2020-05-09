@@ -12,7 +12,7 @@ int main (void)
   //   }));");
 
   //jerry_execute ("var b = require ('button'); var Button = b.Button; var btn = new Button (0, 'rising'); btn.watch(function (value, err){console.log ('primul watch ' + value + ' ' + err);});");
-  jerry_execute ("var Button = require ('onoff').Button; var b = new Button (0, 'rising'); b.watch(function (value, err){console.log ('primul watch ' + value);}); setTimeout(function(){b.setEdge('both'); console.log (b.edge());},5000);");
+  jerry_execute ("var Button = require ('onoff').Button; var b = new Button (0, 'rising'); b.watch(function (value, err){console.log ('primul watch ' + value);}); setTimeout(function(){b.unwatch(); console.log ('unwatch');},5000);");
   //jerry_execute("var led = require ('led'); console.log ('count = '+led.count ()); var Led = led.Led; var l = new Led (0); l.on(); setTimeout (l.off, 2000);");
   while (1){yield();}
 

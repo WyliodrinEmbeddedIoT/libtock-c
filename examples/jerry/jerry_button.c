@@ -2,9 +2,7 @@
 
 typedef struct {
   jerry_value_t cb_function;
-  jerry_value_t edge;
-  int pin;
-
+  jerry_value_t button_object;
 } button_cb_t;
 
 static int get_pin (jerry_value_t jerry_obj){
@@ -29,11 +27,13 @@ static void button_callback(int pin_num,
                             __attribute__ ((unused)) void *ud){
 
     jerry_value_t fct = ((button_cb_t *)ud)->cb_function;
-    jerry_value_t edge_string = ((button_cb_t *)ud)->edge;
+    jerry_value_t button_object = ((button_cb_t *)ud)->button_object;
     
 
-    jerry_value_t string_value = jerry_value_to_string (edge_string);
-    jerry_size_t string_size = jerry_get_string_size (edge_string);
+    jerry_value_t prop_name = jerry_create_string ((const jerry_char_t *) "_edge");
+    jerry_value_t prop_value = jerry_get_property(button_object, prop_name);
+    jerry_value_t string_value = jerry_value_to_string (prop_value);
+    jerry_size_t string_size = jerry_get_string_size (string_value);
     
     char *edge_val = (char*) malloc (string_size + 1);
     int edge = EDGE_NONE;
@@ -48,6 +48,8 @@ static void button_callback(int pin_num,
         free (edge_val);
     }
     jerry_release_value (string_value);
+    jerry_release_value (prop_name);
+    jerry_release_value (prop_value);
 
     if ((edge == EDGE_RISING && val == 1) || (edge == EDGE_FALLING && val == 0) || (edge == EDGE_BOTH)){
         jerry_value_t args[2];
@@ -68,16 +70,12 @@ static jerry_value_t button_watch_handler (const jerry_value_t function_object,
     if (arguments_count > 0 && jerry_value_is_function (arguments[0])){
         jerry_value_t js_callback_function = jerry_acquire_value(arguments[0]);
 
-        jerry_value_t prop_name = jerry_create_string ((const jerry_char_t *) "_edge");
-        jerry_value_t edge = jerry_get_property(function_this, prop_name);
-        jerry_release_value (prop_name);
-
         int pin = get_pin (function_this);
         int ret_val = button_enable_interrupt (pin);
         if (ret_val == TOCK_SUCCESS){
             button_cb_t *ud = malloc (sizeof(button_cb_t));
             ud->cb_function = js_callback_function;
-            ud->edge = edge;
+            ud->button_object = function_this;
             ret_val = button_subscribe(button_callback, ud);
             if (ret_val != TOCK_SUCCESS){
                 jerry_value_t args[2];
@@ -95,7 +93,6 @@ static jerry_value_t button_watch_handler (const jerry_value_t function_object,
                     jerry_release_value (this_val);
                 }
                 jerry_release_value (js_callback_function);
-                jerry_release_value (edge);
                 free (ud);
             }
         }
@@ -114,7 +111,6 @@ static jerry_value_t button_watch_handler (const jerry_value_t function_object,
                 jerry_release_value (this_val);
             }
             jerry_release_value (js_callback_function);
-            jerry_release_value (edge);
         }
     }
     return jerry_create_undefined();
