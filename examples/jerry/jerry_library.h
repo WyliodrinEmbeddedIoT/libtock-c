@@ -6,6 +6,7 @@
 #define EDGE_RISING  0
 #define EDGE_FALLING 1
 #define EDGE_BOTH    2
+#define EDGE_NONE    3
 
 void jerry_setup ();
 void jerry_execute (const char *source);

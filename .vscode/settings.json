@@ -11,6 +11,7 @@
         "unordered_map": "c",
         "vector": "c",
         "jerry_gpio.h": "c",
-        "alarm.h": "c"
+        "alarm.h": "c",
+        "jerry_onoff.h": "c"
     }
 }

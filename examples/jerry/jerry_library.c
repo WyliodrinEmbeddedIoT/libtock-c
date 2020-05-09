@@ -57,19 +57,52 @@ static jerry_value_t require_handler (const jerry_value_t function_object,
             int n = jerry_substring_to_char_buffer(string_value, 0, string_size, (jerry_char_t*)library_name, string_size);
             library_name[n] = '\0';
 
-            if (strncmp (library_name, "gpio", JERRY_MAX_STRING) == 0)
+            if (strncmp (library_name, "onoff", JERRY_MAX_STRING) == 0)
             {
-                jerry_release_value (ret_val);
-                ret_val = setup_gpio ();
+                jerry_value_t onoff_object = jerry_create_object();
+                if (!jerry_value_is_error(onoff_object)){
+                    jerry_value_t prop_name;
+                    jerry_value_t prop_value;
+                    
+                    prop_name = jerry_create_string ((const jerry_char_t *) "Button");
+                    prop_value = setup_button ();
+                    jerry_release_value (jerry_set_property (onoff_object, prop_name, prop_value));
+                    jerry_release_value (prop_name);
+                    jerry_release_value (prop_value);
+
+                    prop_name = jerry_create_string ((const jerry_char_t *) "Led");
+                    prop_value = setup_led ();
+                    jerry_release_value (jerry_set_property (onoff_object, prop_name, prop_value));
+                    jerry_release_value (prop_name);
+                    jerry_release_value (prop_value);
+
+                    prop_name = jerry_create_string ((const jerry_char_t *) "HIGH");
+                    prop_value = jerry_create_number (1);
+                    jerry_release_value (jerry_set_property (onoff_object, prop_name, prop_value));
+                    jerry_release_value (prop_name);
+                    jerry_release_value (prop_value);
+
+                    prop_name = jerry_create_string ((const jerry_char_t *) "LOW");
+                    prop_value = jerry_create_number (0);
+                    jerry_release_value (jerry_set_property (onoff_object, prop_name, prop_value));
+                    jerry_release_value (prop_name);
+                    jerry_release_value (prop_value);
+                }
+                ret_val = onoff_object;
             }
-            else if (strncmp (library_name, "led", JERRY_MAX_STRING) == 0){
-                jerry_release_value (ret_val);
-                ret_val = setup_led ();
-            }
-            else if (strncmp (library_name, "button", JERRY_MAX_STRING) == 0){
-                jerry_release_value (ret_val);
-                ret_val = setup_button ();
-            }
+            // if (strncmp (library_name, "gpio", JERRY_MAX_STRING) == 0)
+            // {
+            //     jerry_release_value (ret_val);
+            //     ret_val = setup_gpio ();
+            // }
+            // else if (strncmp (library_name, "led", JERRY_MAX_STRING) == 0){
+            //     jerry_release_value (ret_val);
+            //     ret_val = setup_led ();
+            // }
+            // else if (strncmp (library_name, "button", JERRY_MAX_STRING) == 0){
+            //     jerry_release_value (ret_val);
+            //     ret_val = setup_button ();
+            // }
 
             free(library_name);
         }

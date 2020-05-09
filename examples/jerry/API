@@ -1,0 +1,41 @@
+require ('onoff');
+onoff.HIGH;
+onoff.LOW;
+====== Button ======
+
+const Button = require ('onoff').Button;
+
+Button.count();
+
+const b = new Button (pin, edge); (edge: falling, rising, both - default e both)
+b.readSync ();
+b.watch (); - un singur watch
+b.unwatch ();
+b.edge ();
+b.setEdge ();
+
+======= GPIO ======
+
+const Gpio = require ('onoff').Gpio;
+
+Gpio.count ();
+
+const g = new Gpio (pin, mode, [edge]) (mode - 'in', 'out', 'high', and 'low'; edge: falling, rising, both - default e both)
+g.readSync ();
+g.writeSync (value) HIGH or LOW
+g.watch () - de testat daca se pot pune mai multe
+g.unwatch () - daca merg mai multe, o sa avem si unwatchAll
+g.direction ()
+g.setDirection()
+g.edge()
+g.setEdge()
+
+====== LED =====
+
+const Led = require ('onoff').Led;
+
+Led.count();
+
+const l = new Led (pin, mode) (mode - high, low);
+l.writeSync (value)
+l.toogle ()

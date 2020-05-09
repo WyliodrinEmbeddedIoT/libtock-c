@@ -2,7 +2,45 @@
 
 jerry_value_t js_callback_function;
 
-//TODO - callback function dupa ce e gata la button
+static jerry_value_t new_gpio_handler (const jerry_value_t function_object,
+               const jerry_value_t function_this,
+               const jerry_value_t arguments[],
+               const jerry_length_t arguments_count){
+    jerry_value_t new_target = jerry_get_new_target ();
+
+    if (jerry_value_get_type (new_target) == JERRY_TYPE_FUNCTION){
+        if (arguments_count > 1){
+            jerry_value_t prop_name = jerry_create_string ((const jerry_char_t *) "pin");
+            jerry_release_value (jerry_set_property (function_this, prop_name, arguments[0]));
+            jerry_release_value (prop_name);
+
+            prop_name = jerry_create_string ((const jerry_char_t *) "mode");
+            jerry_release_value (jerry_set_property (function_this, prop_name, arguments[1]));
+            jerry_release_value (prop_name);
+
+            prop_name = jerry_create_string ((const jerry_char_t *) "edge");
+
+            if (arguments_count == 3){
+                jerry_release_value (jerry_set_property (function_this, prop_name, arguments[2]));
+            }
+            else{
+                jerry_value_t edge = jerry_create_string ((const jerry_char_t *) "none");
+                jerry_release_value (jerry_set_property (function_this, prop_name, edge));
+                jerry_release_value (edge);
+            }
+            jerry_release_value (prop_name);
+
+            // prop_name = jerry_create_string ((const jerry_char_t *) "watch");
+            // jerry_value_t func_obj = jerry_create_external_function (gpio_watch_handler);
+            // jerry_release_value (jerry_set_property (function_this, prop_name, func_obj));
+            // jerry_release_value (prop_name);
+            // jerry_release_value (func_obj);
+        }
+    }
+    jerry_release_value (new_target);
+
+  return jerry_create_undefined ();
+}
 
 static jerry_value_t gpio_enable_output_handler (const jerry_value_t function_object,
                const jerry_value_t function_this,
@@ -192,6 +230,12 @@ jerry_value_t setup_gpio ()
         jerry_release_value (prop_name);
         jerry_release_value (func_obj);
 
+        prop_name = jerry_create_string ((const jerry_char_t *) "Gpio");
+        func_obj = jerry_create_external_function (new_gpio_handler);
+        jerry_release_value (jerry_set_property (gpio_object, prop_name, func_obj));
+        jerry_release_value (prop_name);
+        jerry_release_value (func_obj);
+
         prop_name = jerry_create_string ((const jerry_char_t *) "enable_output");
         func_obj = jerry_create_external_function (gpio_enable_output_handler);
         jerry_release_value (jerry_set_property (gpio_object, prop_name, func_obj));
@@ -278,13 +322,13 @@ jerry_value_t setup_gpio ()
         jerry_release_value (prop_name);
         jerry_release_value (val);
 
-        prop_name = jerry_create_string ((const jerry_char_t *) "RISING_EDGE");
+        prop_name = jerry_create_string ((const jerry_char_t *) "EDGE_RISING");
         val = jerry_create_number (RisingEdge);
         jerry_release_value (jerry_set_property (gpio_object, prop_name, val));
         jerry_release_value (prop_name);
         jerry_release_value (val);
 
-        prop_name = jerry_create_string ((const jerry_char_t *) "FALLING_EDGE");
+        prop_name = jerry_create_string ((const jerry_char_t *) "EDGE_FALLING");
         val = jerry_create_number (FallingEdge);
         jerry_release_value (jerry_set_property (gpio_object, prop_name, val));
         jerry_release_value (prop_name);
