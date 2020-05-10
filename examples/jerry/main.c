@@ -12,8 +12,8 @@ int main (void)
   //   }));");
 
   //jerry_execute ("var b = require ('button'); var Button = b.Button; var btn = new Button (0, 'rising'); btn.watch(function (value, err){console.log ('primul watch ' + value + ' ' + err);});");
-  jerry_execute ("var Button = require ('onoff').Button; var b = new Button (0, 'rising'); b.watch(function (value, err){console.log ('primul watch ' + value);}); setTimeout(function(){b.unwatch(); console.log ('unwatch');},5000);");
-  //jerry_execute("var led = require ('led'); console.log ('count = '+led.count ()); var Led = led.Led; var l = new Led (0); l.on(); setTimeout (l.off, 2000);");
+  //jerry_execute ("var Button = require ('onoff').Button; var b = new Button (0, 'rising'); b.watch(function (value, err){console.log ('primul watch ' + value);}); setTimeout(function(){b.unwatch(); console.log ('unwatch');},5000);");
+  jerry_execute("var Led = require ('onoff').Led; var gpio = require ('onoff'); console.log ('count = '+Led.count ()); var l = new Led (0, 'high'); setTimeout (function(){l.writeSync (gpio.LOW);}, 2000);");
   while (1){yield();}
 
   //var gpio= require ('gpio'); console.log ('count = '+gpio.count ();) var Gpio = gpio.Gpio; var l = new Gpio (0, 'out'); setTimeout (l.toggle, 1000);

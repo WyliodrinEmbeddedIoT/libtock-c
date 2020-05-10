@@ -76,6 +76,12 @@ static jerry_value_t require_handler (const jerry_value_t function_object,
                     jerry_release_value (prop_name);
                     jerry_release_value (prop_value);
 
+                    prop_name = jerry_create_string ((const jerry_char_t *) "Led");
+                    prop_value = setup_led ();
+                    jerry_release_value (jerry_set_property (onoff_object, prop_name, prop_value));
+                    jerry_release_value (prop_name);
+                    jerry_release_value (prop_value);
+
                     prop_name = jerry_create_string ((const jerry_char_t *) "HIGH");
                     prop_value = jerry_create_number (1);
                     jerry_release_value (jerry_set_property (onoff_object, prop_name, prop_value));

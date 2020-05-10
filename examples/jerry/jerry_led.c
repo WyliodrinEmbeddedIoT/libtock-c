@@ -9,14 +9,6 @@ static int get_pin (jerry_value_t jerry_obj){
     return pin;
 }
 
-// static jerry_value_t led_on_handler (const jerry_value_t function_object,
-//                const jerry_value_t function_this,
-//                const jerry_value_t arguments[],
-//                const jerry_length_t arguments_count){
-//     int pin = get_pin (function_this);
-//     return jerry_create_number (led_on (pin));
-// }
-
 static jerry_value_t led_count_handler (const jerry_value_t function_object,
                const jerry_value_t function_this,
                const jerry_value_t arguments[],
@@ -34,7 +26,7 @@ static jerry_value_t led_write_handler (const jerry_value_t function_object,
         int val = jerry_get_number_value (arguments[0]);
         jerry_release_value (ret_val);
         if (val == 1) ret_val = jerry_create_number (led_on (pin));
-        else ret_val = jerry_create_number (led_on (pin));
+        else ret_val = jerry_create_number (led_off (pin));
     }
     return ret_val;
 }
@@ -61,7 +53,7 @@ static jerry_value_t new_led_handler (const jerry_value_t function_object,
 
             if (arguments_count > 1){
                 jerry_value_t mode_value = jerry_value_to_string (arguments[1]);
-                jerry_size_t string_size = jerry_get_string_size (mode_value    );
+                jerry_size_t string_size = jerry_get_string_size (mode_value);
     
                 char *mode_val = (char*) malloc (string_size + 1);
 
@@ -71,12 +63,11 @@ static jerry_value_t new_led_handler (const jerry_value_t function_object,
 
                     int pin = get_pin (function_this);
                     if (strncmp (mode_val, "high", JERRY_MAX_STRING) == 0) led_on (pin);
-                    else if (strncmp (mode_val, "falling", JERRY_MAX_STRING) == 0) led_off (pin);
+                    else if (strncmp (mode_val, "low", JERRY_MAX_STRING) == 0) led_off (pin);
 
                     free (mode_val);
                 }
                 jerry_release_value (mode_value);
-                jerry_release_value (string_size);
             }
 
             prop_name = jerry_create_string ((const jerry_char_t *) "writeSync");
@@ -98,19 +89,11 @@ static jerry_value_t new_led_handler (const jerry_value_t function_object,
 }
 
 jerry_value_t setup_led () {
-    jerry_value_t led_object = jerry_create_object();
+    jerry_value_t led_object = jerry_create_external_function (new_led_handler);
+
     if (!jerry_value_is_error(led_object)){
-        jerry_value_t prop_name;
-        jerry_value_t func_obj;
-
-        prop_name = jerry_create_string ((const jerry_char_t *) "count");
-        func_obj = jerry_create_external_function (led_count_handler);
-        jerry_release_value (jerry_set_property (led_object, prop_name, func_obj));
-        jerry_release_value (prop_name);
-        jerry_release_value (func_obj);
-
-        prop_name = jerry_create_string ((const jerry_char_t *) "Led");
-        func_obj = jerry_create_external_function (new_led_handler);
+        jerry_value_t prop_name = jerry_create_string ((const jerry_char_t *) "count");
+        jerry_value_t func_obj = jerry_create_external_function (led_count_handler);
         jerry_release_value (jerry_set_property (led_object, prop_name, func_obj));
         jerry_release_value (prop_name);
         jerry_release_value (func_obj);
