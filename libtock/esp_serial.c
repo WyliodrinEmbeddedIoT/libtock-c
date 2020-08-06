@@ -1,10 +1,39 @@
 #include "esp_serial.h"
 #include <stdlib.h>
+#include <stdio.h>
+#include <stdio.h>
 
 static uint8_t *tx_buffer = NULL;
 // static uint8_t *rx_buffer = NULL;
 static size_t tx_buffer_len = 0;
 // static size_t rx_buffer_len = 0;
+
+typedef struct {
+  int error;
+  int data1;
+  int data2;
+  bool done;
+} CallbackReturn;
+
+static void write_callback(int error,
+                            __attribute__ ((unused)) int data1,
+                            __attribute__ ((unused)) int data2,
+                            void* ud) {
+  CallbackReturn *ret = (CallbackReturn*)ud;
+  ret->error = error;
+//   ret->data1 = data1;
+  ret->done  = true;
+}
+
+static void read_callback(int error,
+                          int data1,
+                          __attribute__ ((unused)) int data2,
+                          void* ud) {
+  CallbackReturn *ret = (CallbackReturn*)ud;
+  ret->error = error;
+  ret->data1 = data1;
+  ret->done  = true;
+}
 
 int esp_subscribe(subscribe_cb cb, void *userdata, size_t cb_type)
 {
@@ -35,32 +64,40 @@ int bind_socket (uint8_t ip1, uint8_t ip2, uint8_t ip3, uint8_t ip4, size_t port
             return TOCK_FAIL;
         }
     }
-    uint32_t ip_value = 0;
-    ip_value |= ip1;
-    // printf("%lu\n", ip_value);
-    ip_value <<= 8;
-    // printf("%lu\n", ip_value);
-    ip_value |= ip2;
-    // printf("%lu\n", ip_value);
-    ip_value <<= 8;
-    // printf("%lu\n", ip_value);
-    ip_value |= ip3;
-    // printf("%lu\n", ip_value);
-    ip_value <<= 8;
-    // printf("%lu\n", ip_value);
-    ip_value |= ip4;
-    // printf("%lu\n", ip_value);
-    return esp_command(1, ip_value, port);
+    sprintf(tx_buffer, "%s,\"%d.%d.%d.%d\",%d\0", START_COMMAND, ip1, ip2, ip3, ip4, port);
+    CallbackReturn cbret;
+    cbret.done = false;
+    esp_subscribe (write_callback, &cbret);
+    cbret.error = esp_command(1, strlen(tx_buffer), 0);
+    if (cbret.error == TOCK_SUCCESS) yield_for(&cbret.done);
+    return cbret.error;
 }
 
-int send_payload (size_t len)
+int send_UDP_payload (size_t len, char* str)
 {
-    return esp_command(2, len, 0);
+    CallbackReturn cbret;
+    cbret.done = false;
+    esp_subscribe (write_callback, &cbret);
+    sprintf(tx_buffer, "%s%d\n%s", SEND_COMMAND, len, str);
+    cbret.error = esp_command(2, strlen(tx_buffer), 0);
+    if (cbret.error == TOCK_SUCCESS) yield_for(&cbret.done);
+    return cbret.error;
+}
+
+int fake_receive (void)
+{
+    CallbackReturn cbret;
+    cbret.done = false;
+    esp_subscribe (read_callback, &cbret);
+    cbret.error = esp_command(6, 0, 0);
+    if (cbret.error == TOCK_SUCCESS) yield_for(&cbret.done);
+    return cbret.error;
 }
 
 int close_socket (void)
 {
-    return esp_command(5, 0, 0);
+    sprintf(tx_buffer, "%s\0", CLOSE_COMMAND);
+    return esp_command(5, strlen(tx_buffer), 0);
 }
 
 uint8_t* get_tx_buffer (void)
