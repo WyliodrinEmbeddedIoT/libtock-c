@@ -23,6 +23,7 @@ static void write_callback(int error,
   ret->error = error;
 //   ret->data1 = data1;
   ret->done  = true;
+    printf("am primit CB\r\n");
 }
 
 static void read_callback(int error,
@@ -56,20 +57,22 @@ int bind_socket (uint8_t ip1, uint8_t ip2, uint8_t ip3, uint8_t ip4, size_t port
     if (tx_buffer != NULL) {
         return TOCK_EALREADY;
     } else {
-        tx_buffer = (uint8_t*) malloc (1024);
+        tx_buffer = (uint8_t*) calloc (64, sizeof(uint_fast8_t));
         if (tx_buffer != NULL) {
-            tx_buffer_len = 1024;
-            int ret = esp_allow(tx_buffer, 1, 1024);
+            tx_buffer_len = 64;
+            int ret = esp_allow(tx_buffer, 1, 64);
         } else {
             return TOCK_FAIL;
         }
     }
     sprintf(tx_buffer, "%s,\"%d.%d.%d.%d\",%d\0", START_COMMAND, ip1, ip2, ip3, ip4, port);
+    // printf("%s\r\n", tx_buffer);
     CallbackReturn cbret;
     cbret.done = false;
-    esp_subscribe (write_callback, &cbret);
-    cbret.error = esp_command(1, strlen(tx_buffer), 0);
+    esp_subscribe (write_callback, &cbret, 1);
+    cbret.error = esp_command(1, 64, 0);
     if (cbret.error == TOCK_SUCCESS) yield_for(&cbret.done);
+    esp_subscribe (NULL, NULL, 1);
     return cbret.error;
 }
 
@@ -77,10 +80,14 @@ int send_UDP_payload (size_t len, char* str)
 {
     CallbackReturn cbret;
     cbret.done = false;
-    esp_subscribe (write_callback, &cbret);
-    sprintf(tx_buffer, "%s%d\n%s", SEND_COMMAND, len, str);
-    cbret.error = esp_command(2, strlen(tx_buffer), 0);
+    memset(tx_buffer, 0, 64);
+    esp_subscribe (write_callback, &cbret, 1);
+    sprintf(tx_buffer, "%s%d\r\n%s", SEND_COMMAND, len, str);
+    // printf("%s\r\n", tx_buffer);
+    cbret.error = esp_command(2, 64, 0);
     if (cbret.error == TOCK_SUCCESS) yield_for(&cbret.done);
+    esp_subscribe (NULL, NULL, 1);
+    printf("cb done\r\n");
     return cbret.error;
 }
 
@@ -88,7 +95,7 @@ int fake_receive (void)
 {
     CallbackReturn cbret;
     cbret.done = false;
-    esp_subscribe (read_callback, &cbret);
+    esp_subscribe (read_callback, &cbret, 2);
     cbret.error = esp_command(6, 0, 0);
     if (cbret.error == TOCK_SUCCESS) yield_for(&cbret.done);
     return cbret.error;
@@ -97,7 +104,7 @@ int fake_receive (void)
 int close_socket (void)
 {
     sprintf(tx_buffer, "%s\0", CLOSE_COMMAND);
-    return esp_command(5, strlen(tx_buffer), 0);
+    return esp_command(5, 64, 0);
 }
 
 uint8_t* get_tx_buffer (void)
