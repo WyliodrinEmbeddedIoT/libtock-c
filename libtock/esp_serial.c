@@ -51,8 +51,61 @@ int esp_command(int command_num, size_t data1, size_t data2)
     return command(DRIVER_NUM_ESP_SERIAL, command_num, data1, data2);
 }
 
+int check_response()
+{
+    // todo
+    return 0;
+}
 
-int bind_socket (uint8_t ip1, uint8_t ip2, uint8_t ip3, uint8_t ip4, size_t port)
+int send_command (int command_num)
+{
+    CallbackReturn cbret;
+    cbret.done = false;
+    esp_subscribe (write_callback, &cbret, 1);
+    cbret.error = esp_command(command_num, 64, 0);
+    if (cbret.error == TOCK_SUCCESS) yield_for(&cbret.done);
+    esp_subscribe (NULL, NULL, 1);
+    return cbret.error;
+}
+
+int receive_command (int type)
+{
+    CallbackReturn cbret;
+    int ret;
+    cbret.done = false;
+    esp_subscribe (read_callback, &cbret, 2);
+    yield_for (&cbret.done);
+    esp_subscribe(NULL, NULL, 2);
+    if (cbret.error == TOCK_SUCCESS) {
+        if (type) {
+            // get ip and save it in rx_buffer
+            return 0;
+        } else return check_response();
+    } else return cbret.error;
+}
+
+int connect_to_wifi (char* ssid, char* password)
+{
+    memset(tx_buffer, 0, 64);
+    sprintf(tx_buffer, "%s\n\r", SET_WIFI_COMMAND);
+    int ret = send_command(2);
+    
+    if (ret == TOCK_SUCCESS) {
+        ret = receive_command (0);
+        if (ret == TOCK_SUCCESS) {
+            memset(tx_buffer, 0, 64);
+            sprintf(tx_buffer, "%s\"%s\",\"%s\"\n\r", WF_COMMAND, ssid, password);
+            ret = send_command(2);
+            if (ret == TOCK_SUCCESS) {
+                return receive_command(0);
+            }
+        }
+    }
+    return ret;
+}
+
+
+int bind_socket (char* ip_address, size_t port)
 {
     if (tx_buffer != NULL) {
         return TOCK_EALREADY;
@@ -65,30 +118,30 @@ int bind_socket (uint8_t ip1, uint8_t ip2, uint8_t ip3, uint8_t ip4, size_t port
             return TOCK_FAIL;
         }
     }
-    sprintf(tx_buffer, "%s,\"%d.%d.%d.%d\",%d\0", START_COMMAND, ip1, ip2, ip3, ip4, port);
-    // printf("%s\r\n", tx_buffer);
-    CallbackReturn cbret;
-    cbret.done = false;
-    esp_subscribe (write_callback, &cbret, 1);
-    cbret.error = esp_command(1, 64, 0);
-    if (cbret.error == TOCK_SUCCESS) yield_for(&cbret.done);
-    esp_subscribe (NULL, NULL, 1);
-    return cbret.error;
+    memset(tx_buffer, 0, 64);
+    sprintf(tx_buffer, "%s,\"%s\",%d\r\n", START_COMMAND, ip_address, port);
+    int ret = send_command(1);
+    if (ret == TOCK_SUCCESS) {
+        return receive_command(0);
+    }
+    return ret;
 }
 
 int send_UDP_payload (size_t len, char* str)
 {
-    CallbackReturn cbret;
-    cbret.done = false;
     memset(tx_buffer, 0, 64);
-    esp_subscribe (write_callback, &cbret, 1);
-    sprintf(tx_buffer, "%s%d\r\n%s", SEND_COMMAND, len, str);
-    // printf("%s\r\n", tx_buffer);
-    cbret.error = esp_command(2, 64, 0);
-    if (cbret.error == TOCK_SUCCESS) yield_for(&cbret.done);
-    esp_subscribe (NULL, NULL, 1);
-    printf("cb done\r\n");
-    return cbret.error;
+    sprintf(tx_buffer, "%s%d\r\n%s\r\n", SEND_COMMAND, len, str);
+    return send_command(2);
+}
+
+int get_esp_ip (void)
+{
+    memset(tx_buffer, 0, 64);
+    snprintf(tx_buffer, 11, "%s\r\n", GET_IP_COMMAND);
+    int ret = send_command (2);
+    if (ret == TOCK_SUCCESS) {
+        return receive_command(1);
+    } else return ret;
 }
 
 int fake_receive (void)
@@ -103,7 +156,7 @@ int fake_receive (void)
 
 int close_socket (void)
 {
-    sprintf(tx_buffer, "%s\0", CLOSE_COMMAND);
+    sprintf(tx_buffer, "%s\r\n", CLOSE_COMMAND);
     return esp_command(5, 64, 0);
 }
 
