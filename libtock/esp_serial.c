@@ -23,7 +23,6 @@ static void write_callback(int error,
   ret->error = error;
 //   ret->data1 = data1;
   ret->done  = true;
-    printf("am primit CB\r\n");
 }
 
 static void read_callback(int error,
