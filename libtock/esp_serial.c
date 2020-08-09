@@ -85,27 +85,6 @@ int receive_command (int type)
 
 int connect_to_wifi (char* ssid, char* password)
 {
-    memset(tx_buffer, 0, 64);
-    sprintf(tx_buffer, "%s\n\r", SET_WIFI_COMMAND);
-    int ret = send_command(2);
-    
-    if (ret == TOCK_SUCCESS) {
-        ret = receive_command (0);
-        if (ret == TOCK_SUCCESS) {
-            memset(tx_buffer, 0, 64);
-            sprintf(tx_buffer, "%s\"%s\",\"%s\"\n\r", WF_COMMAND, ssid, password);
-            ret = send_command(2);
-            if (ret == TOCK_SUCCESS) {
-                return receive_command(0);
-            }
-        }
-    }
-    return ret;
-}
-
-
-int bind_socket (char* ip_address, size_t port)
-{
     if (tx_buffer != NULL) {
         return TOCK_EALREADY;
     } else {
@@ -118,11 +97,32 @@ int bind_socket (char* ip_address, size_t port)
         }
     }
     memset(tx_buffer, 0, 64);
+    sprintf(tx_buffer, "%s\n\r", SET_WIFI_COMMAND);
+    int ret = send_command(2);
+    
+    if (ret == TOCK_SUCCESS) {
+        // ret = receive_command (0);
+        if (ret == TOCK_SUCCESS) {
+            memset(tx_buffer, 0, 64);
+            sprintf(tx_buffer, "%s\"%s\",\"%s\"\n\r", WF_COMMAND, ssid, password);
+            ret = send_command(2);
+            // if (ret == TOCK_SUCCESS) {
+                // return receive_command(0);
+            // }
+        }
+    }
+    return ret;
+}
+
+
+int bind_socket (char* ip_address, size_t port)
+{
+    memset(tx_buffer, 0, 64);
     sprintf(tx_buffer, "%s,\"%s\",%d\r\n", START_COMMAND, ip_address, port);
     int ret = send_command(1);
-    if (ret == TOCK_SUCCESS) {
-        return receive_command(0);
-    }
+    // if (ret == TOCK_SUCCESS) {
+    //     return receive_command(0);
+    // }
     return ret;
 }
 
@@ -155,6 +155,7 @@ int fake_receive (void)
 
 int close_socket (void)
 {
+    memset(tx_buffer, 0, 64);
     sprintf(tx_buffer, "%s\r\n", CLOSE_COMMAND);
     return esp_command(5, 64, 0);
 }

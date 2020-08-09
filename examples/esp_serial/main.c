@@ -1,16 +1,24 @@
 /* vim: set sw=2 expandtab tw=80: */
+// bind -> port (if 0 -> random)
+// listen -> port
+// send
+// recv
+// close
+// socket -> first available socket
 
 #include <stdio.h>
 #include <esp_serial.h>
 #include <timer.h>
 
 int main(void) {
-  int ret = bind_socket(192, 168, 1, 1, 8080);
-  printf("\r\nfirst command\r\n");
+  connect_to_wifi("salut", "parola");
+  int ret = bind_socket("127.0.0.1", 2399);
   delay_ms(1000);
+  // send ip, port, mesaj, lungime
+  // esp send_to
   send_UDP_payload(18, "salut, ce mai faci");
-  printf("\r\n2nd command\r\n");
   delay_ms(1000);
-  close_socket();
+  // close_socket();
+  
   return 0;
 }
