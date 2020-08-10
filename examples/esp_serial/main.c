@@ -18,6 +18,7 @@ int main(void) {
   // esp send_to
   send_UDP_payload(18, "salut, ce mai faci");
   delay_ms(1000);
+  // fake_receive();
   // close_socket();
   
   return 0;

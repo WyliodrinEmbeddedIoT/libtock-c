@@ -3,11 +3,6 @@
 #include <stdio.h>
 #include <stdio.h>
 
-static uint8_t *tx_buffer = NULL;
-// static uint8_t *rx_buffer = NULL;
-static size_t tx_buffer_len = 0;
-// static size_t rx_buffer_len = 0;
-
 typedef struct {
   int error;
   int data1;
@@ -139,17 +134,35 @@ int get_esp_ip (void)
     snprintf(tx_buffer, 11, "%s\r\n", GET_IP_COMMAND);
     int ret = send_command (2);
     if (ret == TOCK_SUCCESS) {
-        return receive_command(1);
+        // return receive_command(1);
     } else return ret;
 }
 
 int fake_receive (void)
 {
+    printf("is rx?\r\n");
+    if (rx_buffer != NULL) {
+        return TOCK_EALREADY;
+    } else {
+        rx_buffer = (uint8_t*) calloc (64, sizeof(uint_fast8_t));
+        if (rx_buffer != NULL) {
+            rx_buffer_len = 64;
+            int ret = esp_allow(rx_buffer, 2, 64);
+        } else {
+            return TOCK_FAIL;
+        }
+    }
+    printf("no\r\n");
     CallbackReturn cbret;
     cbret.done = false;
     esp_subscribe (read_callback, &cbret, 2);
-    cbret.error = esp_command(6, 0, 0);
+    printf("sub?\r\n");
+    cbret.error = esp_command(3, 10, 0);
+    printf("command\r\n");
     if (cbret.error == TOCK_SUCCESS) yield_for(&cbret.done);
+    printf("callback called\r\n");
+    printf("%s\r\n", rx_buffer);
+    esp_subscribe(NULL, NULL, 2);
     return cbret.error;
 }
 

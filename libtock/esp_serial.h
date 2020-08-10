@@ -15,6 +15,11 @@
 extern "C" {
 #endif
 
+static uint8_t *tx_buffer = NULL;
+static uint8_t *rx_buffer = NULL;
+static size_t tx_buffer_len = 0;
+static size_t rx_buffer_len = 0;
+
 uint8_t* get_tx_buffer (void);
 // uint8_t* get_rx_buffer (void); 
 
