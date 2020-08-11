@@ -27,19 +27,21 @@ static uint8_t *tx_buffer = NULL;
 static uint8_t *rx_buffer = NULL;
 static size_t tx_buffer_len = 0;
 static size_t rx_buffer_len = 0;
+static uint8_t *user_buffer = NULL;
 
 uint8_t* get_tx_buffer (void);
-uint8_t* get_rx_buffer (void); 
+uint8_t* get_rx_buffer (void);
+uint8_t* get_user_buffer (void);
 
-int connect_to_wifi(char* ssid, char* password);
+int connect_to_wifi(char* ssid, char* password, int link_id);
 int get_esp_ip(void);
 int bind (char* ip_address, int port_dest, int* port_src, int* link_id);
 int send_UDP_payload (size_t len, char* str, int link_id);
 int close_socket (int link_id);
 
 int fake_receive (void);
-int receive_command (int type);
-int send_command (int command_num, int wait_for_response);
+int receive_command (int type, int wait_yield);
+int send_command (int command_num, int wait_for_response, int link_id);
 int check_response (void);
 int esp_command (int command_num, size_t data1, size_t data2);
 int esp_allow (void* ptr, size_t buffer_type, size_t size);
