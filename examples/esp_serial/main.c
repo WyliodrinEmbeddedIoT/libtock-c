@@ -11,13 +11,15 @@
 #include <timer.h>
 
 int main(void) {
-  connect_to_wifi("salut", "parola");
-  int ret = bind_socket("127.0.0.1", 2399);
-  delay_ms(1000);
+  // connect_to_wifi("salut", "parola");
+  int portSrc = 8080;
+  int linkId = 1;
+  int ret = bind("127.0.0.1", 2399, &portSrc, &linkId);
+  // delay_ms(1000);
   // send ip, port, mesaj, lungime
   // esp send_to
-  send_UDP_payload(18, "salut, ce mai faci");
-  delay_ms(1000);
+  // send_UDP_payload(18, "salut, ce mai faci", linkId);
+  // delay_ms(1000);
   // fake_receive();
   // close_socket();
   

@@ -28,6 +28,7 @@ static void read_callback(int error,
   ret->error = error;
   ret->data1 = data1;
   ret->done  = true;
+  printf("received\r\n");
 }
 
 int esp_subscribe(subscribe_cb cb, void *userdata, size_t cb_type)
@@ -58,7 +59,7 @@ int send_command (int command_num, int wait_for_response)
     // register the write_callback to be called
     esp_subscribe (write_callback, &cbret, 1);
     // execute command
-    cbret.error = esp_command(command_num, 64, 0);
+    cbret.error = esp_command(command_num, strlen(tx_buffer), 0);
     // wait for the callback to be called
     if (cbret.error == TOCK_SUCCESS) yield_for(&cbret.done);
     // unsubscribe the callback
@@ -129,29 +130,43 @@ int bind (char* ip_address, int port_dest, int* port_src, int* link_id)
 {
     // get first available link_id from capsule (successWithValue)
     *link_id = esp_command(LINK_ID_COMMAND_NUMBER, 0, 0); 
-
+    printf("%d\r\n", *link_id);
+    *link_id = esp_command(LINK_ID_COMMAND_NUMBER, 0, 0); 
+    printf("%d\r\n", *link_id);
     // send CIPMUX=1 command to enable multiple connections
+    if (tx_buffer != NULL) {
+        return TOCK_EALREADY;
+    } else {
+        tx_buffer = (uint8_t*) calloc (64, sizeof(uint_fast8_t));
+        if (tx_buffer != NULL) {
+            tx_buffer_len = 64;
+            int ret = esp_allow(tx_buffer, 1, 64);
+            if (ret != TOCK_SUCCESS) return ret;
+        } else {
+            return TOCK_FAIL;
+        }
+    }
     memset(tx_buffer, 0, 64);
-    snprintf((char*) tx_buffer, 14, "%s\r\n", CONNECTION_TYPE_COMMAND);
-    int ret = send_command(BIND_COMMAND_NUMBER, 0);
+    // snprintf((char*) tx_buffer, 14, "%s\r\n", CONNECTION_TYPE_COMMAND);
+    // int ret = send_command(BIND_COMMAND_NUMBER, 0);
 
-    if (ret == TOCK_SUCCESS) {
+    // if (ret == TOCK_SUCCESS) {
         // ret = receive_command(0);
-        if (ret == TOCK_SUCCESS) {
+        // if (ret == TOCK_SUCCESS) {
             // send CIPSTART_COMMAND
             memset(tx_buffer, 0, 64);
             if (*port_src == 0) {
                 *port_src = rand() % 5000;
             }
-            snprintf((char*) tx_buffer, 32 + strlen(ip_address), "%s%d,\"UDP\",\"%s\",%d,%d\r\n", START_COMMAND, *link_id, ip_address, port_dest, *port_src);
+            snprintf((char*) tx_buffer, 33 + strlen(ip_address), "%s%d,\"UDP\",\"%s\",%d,%d\r\n", START_COMMAND, *link_id, ip_address, port_dest, *port_src);
             // still dunno what we're waiting for here?
-            ret = send_command(BIND_COMMAND_NUMBER, 0);
-
-            if (ret == TOCK_SUCCESS) {
-                // return receive_command(0);
+            int ret = send_command(BIND_COMMAND_NUMBER, 0);
+            printf("SEND FINISHED %d\r\n", ret);
+            if (ret > 0) {
+                return receive_command(0);
             }
-        }
-    }
+        // }
+    // }
     return ret;
 }
 
