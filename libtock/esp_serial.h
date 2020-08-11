@@ -35,7 +35,7 @@ int connect_to_wifi(char* ssid, char* password);
 int get_esp_ip(void);
 int bind (char* ip_address, int port_dest, int* port_src, int* link_id);
 int send_UDP_payload (size_t len, char* str, int link_id);
-int close_socket (void);
+int close_socket (int link_id);
 
 int fake_receive (void);
 int receive_command (int type);

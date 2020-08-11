@@ -52,14 +52,14 @@ int check_response(void)
     return 0;
 }
 
-int send_command (int command_num, int wait_for_response)
+int send_command (int command_num, int wait_for_response, int link_id)
 {
     CallbackReturn cbret;
     cbret.done = false;
     // register the write_callback to be called
     esp_subscribe (write_callback, &cbret, 1);
     // execute command
-    cbret.error = esp_command(command_num, strlen(tx_buffer), 0);
+    cbret.error = esp_command(command_num, strlen(tx_buffer), link_id);
     // wait for the callback to be called
     if (cbret.error == TOCK_SUCCESS) yield_for(&cbret.done);
     // unsubscribe the callback
@@ -91,7 +91,7 @@ int receive_command (int type)
     } else return cbret.error;
 }
 
-int connect_to_wifi (char* ssid, char* password)
+int connect_to_wifi (char* ssid, char* password, int link_id)
 {
     // share tx_buffer, we assume we connect to the internet first
     if (tx_buffer != NULL) {
@@ -109,7 +109,7 @@ int connect_to_wifi (char* ssid, char* password)
     // send the connection to wifi command
     memset(tx_buffer, 0, 64);
     snprintf((char*) tx_buffer, 14, "%s\n\r", SET_WIFI_COMMAND);
-    int ret = send_command(GENERAL_COMMAND_NUMBER, 0);
+    int ret = send_command(GENERAL_COMMAND_NUMBER, link_id);
     
     if (ret == TOCK_SUCCESS) {
         // ret = receive_command (0);
@@ -117,7 +117,7 @@ int connect_to_wifi (char* ssid, char* password)
             memset(tx_buffer, 0, 64);
             // send the actual command with ssid and password
             snprintf((char*) tx_buffer, 17 + strlen(ssid) + strlen(password), "%s\"%s\",\"%s\"\n\r", WF_COMMAND, ssid, password);
-            ret = send_command(GENERAL_COMMAND_NUMBER, 0);
+            ret = send_command(GENERAL_COMMAND_NUMBER, link_id);
             // if (ret == TOCK_SUCCESS) {
                 // return receive_command(0);
             // }
@@ -129,8 +129,6 @@ int connect_to_wifi (char* ssid, char* password)
 int bind (char* ip_address, int port_dest, int* port_src, int* link_id)
 {
     // get first available link_id from capsule (successWithValue)
-    *link_id = esp_command(LINK_ID_COMMAND_NUMBER, 0, 0); 
-    printf("%d\r\n", *link_id);
     *link_id = esp_command(LINK_ID_COMMAND_NUMBER, 0, 0); 
     printf("%d\r\n", *link_id);
     // send CIPMUX=1 command to enable multiple connections
@@ -147,12 +145,12 @@ int bind (char* ip_address, int port_dest, int* port_src, int* link_id)
         }
     }
     memset(tx_buffer, 0, 64);
-    // snprintf((char*) tx_buffer, 14, "%s\r\n", CONNECTION_TYPE_COMMAND);
-    // int ret = send_command(BIND_COMMAND_NUMBER, 0);
+    snprintf((char*) tx_buffer, 14, "%s\r\n", CONNECTION_TYPE_COMMAND);
+    int ret = send_command(BIND_COMMAND_NUMBER, *link_id);
 
-    // if (ret == TOCK_SUCCESS) {
-        // ret = receive_command(0);
-        // if (ret == TOCK_SUCCESS) {
+    if (ret == TOCK_SUCCESS) {
+        ret = receive_command(0);
+        if (ret == TOCK_SUCCESS) {
             // send CIPSTART_COMMAND
             memset(tx_buffer, 0, 64);
             if (*port_src == 0) {
@@ -160,7 +158,7 @@ int bind (char* ip_address, int port_dest, int* port_src, int* link_id)
             }
             snprintf((char*) tx_buffer, 33 + strlen(ip_address), "%s%d,\"UDP\",\"%s\",%d,%d\r\n", START_COMMAND, *link_id, ip_address, port_dest, *port_src);
             // still dunno what we're waiting for here?
-            int ret = send_command(BIND_COMMAND_NUMBER, 0);
+            int ret = send_command(BIND_COMMAND_NUMBER, *link_id);
             printf("SEND FINISHED %d\r\n", ret);
             if (ret > 0) {
                 return receive_command(0);
@@ -175,7 +173,7 @@ int send_UDP_payload (size_t len, char* str, int link_id)
     memset(tx_buffer, 0, 64);
     // save the payload and send the command
     snprintf((char*) tx_buffer, 16 + len, "%s%d,%d\r\n%s\r\n", SEND_COMMAND, link_id, len, str);
-    return send_command(GENERAL_COMMAND_NUMBER, 0);
+    return send_command(GENERAL_COMMAND_NUMBER, link_id);
 }
 
 int get_esp_ip (void)
@@ -189,43 +187,11 @@ int get_esp_ip (void)
     return ret;
 }
 
-int fake_receive (void)
-{
-    // share rx_buffer in order to be able to receive data from capsule
-    printf("is rx?\r\n");
-    if (rx_buffer != NULL) {
-        return TOCK_EALREADY;
-    } else {
-        rx_buffer = (uint8_t*) calloc (64, sizeof(uint_fast8_t));
-        if (rx_buffer != NULL) {
-            rx_buffer_len = 64;
-            int ret = esp_allow(rx_buffer, 2, 64);
-            if (ret != TOCK_SUCCESS) {
-                return ret;
-            }
-        } else {
-            return TOCK_FAIL;
-        }
-    }
-    printf("no\r\n");
-    CallbackReturn cbret;
-    cbret.done = false;
-    esp_subscribe (read_callback, &cbret, 2);
-    printf("sub?\r\n");
-    cbret.error = esp_command(RECEIVE_COMMAND_NUMBER, 10, 0);
-    printf("command\r\n");
-    if (cbret.error == TOCK_SUCCESS) yield_for(&cbret.done);
-    printf("callback called\r\n");
-    printf("%s\r\n", rx_buffer);
-    esp_subscribe(NULL, NULL, 2);
-    return cbret.error;
-}
-
-int close_socket (void)
+int close_socket (int link_id)
 {
     memset(tx_buffer, 0, 64);
     snprintf((char*) tx_buffer, 16, "%s\r\n", CLOSE_COMMAND);
-    return esp_command(CLOSE_COMMAND_NUMBER, 64, 0);
+    return esp_command(CLOSE_COMMAND_NUMBER, 64, link_id);
 }
 
 uint8_t* get_tx_buffer (void)
