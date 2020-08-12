@@ -76,19 +76,6 @@ int send_command (int command_num, int wait_for_response, int link_id)
 
 int receive_command (int type, int wait_yield)
 {
-    if (rx_buffer != NULL) {
-        return TOCK_EALREADY;
-    } else {
-        rx_buffer = (uint8_t*) calloc (64, sizeof(uint_fast8_t));
-        user_buffer = (uint8_t*) calloc (64, sizeof(uint_fast8_t));
-        if (rx_buffer != NULL) {
-            rx_buffer_len = 64;
-            int ret = esp_allow(rx_buffer, 2, 64);
-            if (ret != TOCK_SUCCESS) return ret;
-        } else {
-            return TOCK_FAIL;
-        }
-    }
     CallbackReturn cbret;
     cbret.done = false;
     // subscribe the read callback
@@ -154,6 +141,20 @@ int bind (char* ip_address, int port_dest, int* port_src, int* link_id)
         if (tx_buffer != NULL) {
             tx_buffer_len = 64;
             int ret = esp_allow(tx_buffer, 1, 64);
+            if (ret != TOCK_SUCCESS) return ret;
+        } else {
+            return TOCK_FAIL;
+        }
+    }
+
+    if (rx_buffer != NULL) {
+        return TOCK_EALREADY;
+    } else {
+        rx_buffer = (uint8_t*) calloc (64, sizeof(uint_fast8_t));
+        user_buffer = (uint8_t*) calloc (64, sizeof(uint_fast8_t));
+        if (rx_buffer != NULL) {
+            rx_buffer_len = 64;
+            int ret = esp_allow(rx_buffer, 2, 64);
             if (ret != TOCK_SUCCESS) return ret;
         } else {
             return TOCK_FAIL;
