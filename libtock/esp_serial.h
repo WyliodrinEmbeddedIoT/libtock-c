@@ -29,7 +29,6 @@ static size_t tx_buffer_len = 0;
 static size_t rx_buffer_len = 0;
 static uint8_t *user_buffer = NULL;
 
-
 typedef void (user_callback)(char*, int);
 
 uint8_t* get_tx_buffer (void);
