@@ -80,6 +80,7 @@ int receive_command (int type, int wait_yield)
         return TOCK_EALREADY;
     } else {
         rx_buffer = (uint8_t*) calloc (64, sizeof(uint_fast8_t));
+        user_buffer = (uint8_t*) calloc (64, sizeof(uint_fast8_t));
         if (rx_buffer != NULL) {
             rx_buffer_len = 64;
             int ret = esp_allow(rx_buffer, 2, 64);

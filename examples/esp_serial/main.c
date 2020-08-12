@@ -12,9 +12,9 @@
 
 int main(void) {
   // connect_to_wifi("salut", "parola");
-  int portSrc = 8080;
+  int portSrc = 2399;
   int linkId;
-  int ret = bind("127.0.0.1", 2399, &portSrc, &linkId);
+  int ret = bind("192.168.1.100", 8080, &portSrc, &linkId);
   // delay_ms(1000);
   // send ip, port, mesaj, lungime
   // esp send_to
