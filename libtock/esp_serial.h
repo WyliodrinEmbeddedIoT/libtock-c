@@ -30,14 +30,14 @@ uint8_t* get_rx_buffer (void);
 uint8_t* get_user_buffer (void);
 
 int subscribe_user_callback (user_callback* cb, void* ud);
-int connect_to_wifi(char* ssid, char* password, int link_id);
+// int connect_to_wifi(char* ssid, char* password, int link_id);
 int get_esp_ip(void);
 int bind (const char* ip_address, int port_dest, int* port_src, int* link_id);
 int send_UDP_payload (size_t len, const char* str, int link_id);
 int close_socket (int link_id);
 
-int receive_command (int type, int wait_yield);
-int send_command (int command_num, int wait_for_response, int link_id);
+int receive_command (int wait_yield);
+int send_command (int command_num, int link_id);
 int check_response (void);
 int esp_command (int command_num, size_t data1, size_t data2);
 int esp_allow (void* ptr, size_t buffer_type, size_t size);

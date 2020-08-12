@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdio.h>
 
+// Callback Struct Type
 typedef struct {
   int error;
   int data1;
@@ -11,6 +12,7 @@ typedef struct {
 } CallbackReturn;
 
 static user_callback *receive_buffer_callback = NULL;
+static bool connected = false;
 
 static uint8_t *tx_buffer = NULL;
 static uint8_t *rx_buffer = NULL;
@@ -18,6 +20,17 @@ static size_t tx_buffer_len = 0;
 static size_t rx_buffer_len = 0;
 static uint8_t *user_buffer = NULL;
 
+/* write_callback() defines the callback function that will be called
+ * from the kernel after an UDP payload is being sent. 
+ * 
+ * The arguments are: 
+ *  - error (or the return info) can be
+ *      * TOCK_SUCCESS
+ *      * any error received by the capsule
+ *  - data1 -> stores the number of bytes that were sent by the capsule
+ *             (in case of an TOCK_SUCCESS return), or 0 (in case of an
+ *             actual error)
+ */
 static void write_callback(int error,
                            int data1,
                            __attribute__ ((unused)) int data2,
@@ -28,6 +41,22 @@ static void write_callback(int error,
   ret->done  = true;
 }
 
+/* read_callback() defines the callback function that will be called
+ * from the kernel when a message for the application was received. The
+ * message from the kernel can be found in the shared `rx_buffer`. If
+ * the user defined a callback of type `static user_callback*` callback
+ * in the main() function, that callback will actually be called from the
+ * library's read_callback. 
+ * 
+ * The arguments are: 
+ *  - error (or the return info) can be
+ *      * TOCK_SUCCESS
+ *      * TOCK_FAIL if there was an `ERROR` response from the ESP
+ *      * TOCK_EALREADY if there was en `ALREADY CONNECTED` response
+ *  - data1 -> stores the number of bytes that were sent by the capsule
+ *             to the userspace application (in case of an TOCK_SUCCESS 
+ *             return), or 0 (in case of an actual error)
+ */
 static void read_callback(int error,
                           int data1,
                           __attribute__ ((unused)) int data2,
@@ -44,35 +73,40 @@ static void read_callback(int error,
   }
 }
 
-
+/* Sends to the kernel a subscribe syscall */
 int esp_subscribe(subscribe_cb cb, void *userdata, size_t cb_type)
 {
     return subscribe(DRIVER_NUM_ESP_SERIAL, cb_type, cb, userdata);
 }
 
+/* Sends to the kernel an allow syscall */
 int esp_allow(void* ptr, size_t buffer_type, size_t size)
 {
     return allow(DRIVER_NUM_ESP_SERIAL, buffer_type, ptr, size);
 }
 
+/* Sends to the kernel a command syscall */
 int esp_command(int command_num, size_t data1, size_t data2)
 {
     return command(DRIVER_NUM_ESP_SERIAL, command_num, data1, data2);
 }
 
-int check_response(void)
-{
-    // todo
-    return 0;
-}
-
+/* Sends to the kernel a user defined subscribe syscall */
 int subscribe_user_callback (user_callback* cb, void* ud)
 {
     receive_buffer_callback = cb;
     return esp_subscribe(cb != NULL ? read_callback : NULL, ud, 2);
 }
 
-int send_command (int command_num, int wait_for_response, int link_id)
+/* Helper library function that sends any command syscall to the 
+ * capsule and waits (in the yield_for()) for the capsule to send a
+ * response (via a write callback). 
+ *
+ * As arguments, there are:
+ *      - the command_num for the `command` syscall
+ *      - the link_id to identify the communication channel
+ */
+int send_command (int command_num, int link_id)
 {
     CallbackReturn cbret;
     cbret.done = false;
@@ -84,63 +118,76 @@ int send_command (int command_num, int wait_for_response, int link_id)
     if (cbret.error == TOCK_SUCCESS) yield_for(&cbret.done);
     // unsubscribe the callback
     esp_subscribe (NULL, NULL, 1);
-    // are we waiting for sth special? (link_id for example)
-    if (wait_for_response) {
-        return cbret.data1;
-    } else return cbret.error;
+    // return the syscall return info
+    return cbret.error;
 }
 
-int receive_command (int type, int wait_yield)
+/* Helper library function that subscribes a read callback, in order
+ * to receive data later from the capsule via the `rx_buffer`. 
+ * capsule and waits (in the yield_for()) for the capsule to send a
+ * response (via a write callback). 
+ *
+ * As argument, there is:
+ *      - wait_yield: 0 -> just register the callback and return
+                      1 -> wait for an immediate response from the capsule
+                           (for example wait for the IP address)
+ */
+int receive_command (int wait_yield)
 {
     CallbackReturn cbret;
     cbret.done = false;
     // subscribe the read callback
     esp_subscribe (read_callback, &cbret, 2);
-    // wait for the callback to be called
+    // wait for the callback to be called if necessary
     if (wait_yield) {
         yield_for (&cbret.done);
     }
 
-    if (cbret.error == TOCK_SUCCESS) {
-        // are we waiting for some special string? (like ip_address)
-        if (type) {
-            // get ip and save it in rx_buffer
-            return 0;
-            // else - we wait for data in rx_buffer, we check rx_buffer then
-        } else return check_response();
-        // else we were waiting for confirmation (OK, EROOR, etc);
-    } else return cbret.error;
+    // if (cbret.error == TOCK_SUCCESS) {
+    //     // are we waiting for some special string? (like ip_address)
+    //     if (type) {
+    //         // get ip and save it in rx_buffer
+    //         return 0;
+    //         // else - we wait for data in rx_buffer, we check rx_buffer then
+    //     } else return check_response();
+    //     // else we were waiting for confirmation (OK, EROOR, etc);
+    // } else 
+    return cbret.error;
 }
 
-int connect_to_wifi (char* ssid, char* password, int link_id)
-{
-    // share tx_buffer, we assume we connect to the internet first
-    if (tx_buffer != NULL) {
-        return TOCK_EALREADY;
-    } else {
-        tx_buffer = (uint8_t*) calloc (64, sizeof(uint_fast8_t));
-        if (tx_buffer != NULL) {
-            tx_buffer_len = 64;
-            int ret = esp_allow(tx_buffer, 1, 64);
-            if (ret != TOCK_SUCCESS) return ret;
-        } else {
-            return TOCK_FAIL;
-        }
-    }
-    // send the connection to wifi command
-    memset(tx_buffer, 0, 64);
-    snprintf((char*) tx_buffer, 14, "%s\n\r", SET_WIFI_COMMAND);
-    int ret = send_command(GENERAL_COMMAND_NUMBER, 0, link_id);
+/* still in dev */
+// int connect_to_wifi (char* ssid, char* password, int link_id)
+// {
+//     // share tx_buffer, we assume we connect to the internet first
+//     if (tx_buffer != NULL) {
+//         return TOCK_EALREADY;
+//     } else {
+//         tx_buffer = (uint8_t*) calloc (64, sizeof(uint_fast8_t));
+//         if (tx_buffer != NULL) {
+//             tx_buffer_len = 64;
+//             int ret = esp_allow(tx_buffer, 1, 64);
+//             if (ret != TOCK_SUCCESS) return ret;
+//         } else {
+//             return TOCK_FAIL;
+//         }
+//     }
+//     // send the connection to wifi command
+//     memset(tx_buffer, 0, 64);
+//     snprintf((char*) tx_buffer, 14, "%s\n\r", SET_WIFI_COMMAND);
+//     int ret = send_command(GENERAL_COMMAND_NUMBER, link_id);
     
-    if (ret == TOCK_SUCCESS) {
-        memset(tx_buffer, 0, 64);
-        // send the actual command with ssid and password
-        snprintf((char*) tx_buffer, 17 + strlen(ssid) + strlen(password), "%s\"%s\",\"%s\"\n\r", WF_COMMAND, ssid, password);
-        ret = send_command(GENERAL_COMMAND_NUMBER, 0, link_id);
-    }
-    return ret;
-}
+//     if (ret == TOCK_SUCCESS) {
+//         memset(tx_buffer, 0, 64);
+//         // send the actual command with ssid and password
+//         snprintf((char*) tx_buffer, 17 + strlen(ssid) + strlen(password), "%s\"%s\",\"%s\"\n\r", WF_COMMAND, ssid, password);
+//         ret = send_command(GENERAL_COMMAND_NUMBER, link_id);
+//     }
+//     return ret;
+// }
 
+
+/*
+ */
 int bind (const char* ip_address, int port_dest, int* port_src, int* link_id)
 {
     int ret;
@@ -176,7 +223,7 @@ int bind (const char* ip_address, int port_dest, int* port_src, int* link_id)
     // send CIPMUX=1 command to enable multiple connections
     memset(tx_buffer, 0, 64);
     snprintf((char*) tx_buffer, 14, "%s\r\n", CONNECTION_TYPE_COMMAND);
-    ret = send_command(BIND_COMMAND_NUMBER, 0, *link_id);
+    ret = send_command(BIND_COMMAND_NUMBER, *link_id);
 
     if (ret == TOCK_SUCCESS) {
         // send CIPSTART_COMMAND
@@ -186,9 +233,9 @@ int bind (const char* ip_address, int port_dest, int* port_src, int* link_id)
         }
         snprintf((char*) tx_buffer, 35 + strlen(ip_address), "%s%d,\"UDP\",\"%s\",%d,%d\r\n", START_COMMAND, *link_id, ip_address, port_dest, *port_src);
         // still dunno what we're waiting for here?
-        ret = send_command(BIND_COMMAND_NUMBER, 0, *link_id);
+        ret = send_command(BIND_COMMAND_NUMBER, *link_id);
         if (ret == 0) {
-            return receive_command(0, 0);
+            return receive_command(0);
         }
     }
     return ret;
@@ -199,16 +246,16 @@ int send_UDP_payload (size_t len, const char* str, int link_id)
     memset(tx_buffer, 0, 64);
     // save the payload and send the command
     snprintf((char*) tx_buffer, 20 + len, "%s%d,%d\r\n%s\r\n", SEND_COMMAND, link_id, len, str);
-    return send_command(GENERAL_COMMAND_NUMBER, 0, link_id);
+    return send_command(GENERAL_COMMAND_NUMBER, link_id);
 }
 
 int get_esp_ip (void)
 {
     memset(tx_buffer, 0, 64);
     snprintf((char*) tx_buffer, 11, "%s\r\n", GET_IP_COMMAND);
-    int ret = send_command (GENERAL_COMMAND_NUMBER, 1, 0);
+    int ret = send_command (GENERAL_COMMAND_NUMBER, 0);
     if (ret == TOCK_SUCCESS) {
-        // return receive_command(1);
+        return receive_command(1);
     }
     return ret;
 }
