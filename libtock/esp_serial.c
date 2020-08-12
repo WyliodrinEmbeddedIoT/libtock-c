@@ -250,6 +250,10 @@ int bind (const char* ip_address, int port_dest, int* port_src, int* link_id)
     return ret;
 }
 
+
+/* send_UPD_payload() saved the message from the user and sends it to the
+ * capsule, through a syscall and the shared `tx_buffer`
+ */
 int send_UDP_payload (size_t len, const char* str, int link_id)
 {
     memset(tx_buffer, 0, 64);
@@ -258,6 +262,11 @@ int send_UDP_payload (size_t len, const char* str, int link_id)
     return send_command(GENERAL_COMMAND_NUMBER, link_id);
 }
 
+/* get_esp_ip() asks the device to send back its ip address. The response will be
+ * stored in the `rx_buffer` after the `read_callback`.
+ *
+ * Demo function only!!
+ */
 int get_esp_ip (void)
 {
     memset(tx_buffer, 0, 64);
