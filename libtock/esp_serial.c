@@ -37,6 +37,7 @@ static void read_callback(int error,
   ret->data1 = data1;
   ret->done  = true;
   if (error == 0 && data1 != 0) {
+    memset(user_buffer, 0, 64);
     memcpy(user_buffer, rx_buffer, data1);
     memset(rx_buffer, 0, 64);
     if (receive_buffer_callback) receive_buffer_callback ((char*) user_buffer, data1);
