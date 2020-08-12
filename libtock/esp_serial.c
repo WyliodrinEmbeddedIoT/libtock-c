@@ -10,6 +10,14 @@ typedef struct {
   bool done;
 } CallbackReturn;
 
+static user_callback *receive_buffer_callback = NULL;
+
+static uint8_t *tx_buffer = NULL;
+static uint8_t *rx_buffer = NULL;
+static size_t tx_buffer_len = 0;
+static size_t rx_buffer_len = 0;
+static uint8_t *user_buffer = NULL;
+
 static void write_callback(int error,
                            int data1,
                            __attribute__ ((unused)) int data2,
@@ -30,10 +38,11 @@ static void read_callback(int error,
   ret->done  = true;
   if (error == 0 && data1 != 0) {
     memcpy(user_buffer, rx_buffer, data1);
-    printf("%s\r\n", rx_buffer);
     memset(rx_buffer, 0, 64);
+    if (receive_buffer_callback) receive_buffer_callback (user_buffer, data1);
   }
 }
+
 
 int esp_subscribe(subscribe_cb cb, void *userdata, size_t cb_type)
 {
@@ -56,6 +65,12 @@ int check_response(void)
     return 0;
 }
 
+int subscribe_user_callback (user_callback* cb, void* ud)
+{
+    receive_buffer_callback = cb;
+    return esp_subscribe(cb != NULL ? read_callback : NULL, ud, 2);
+}
+
 int send_command (int command_num, int wait_for_response, int link_id)
 {
     CallbackReturn cbret;
@@ -63,7 +78,7 @@ int send_command (int command_num, int wait_for_response, int link_id)
     // register the write_callback to be called
     esp_subscribe (write_callback, &cbret, 1);
     // execute command
-    cbret.error = esp_command(command_num, strlen(tx_buffer), link_id);
+    cbret.error = esp_command(command_num, strlen((char*)tx_buffer), link_id);
     // wait for the callback to be called
     if (cbret.error == TOCK_SUCCESS) yield_for(&cbret.done);
     // unsubscribe the callback
@@ -96,11 +111,6 @@ int receive_command (int type, int wait_yield)
     } else return cbret.error;
 }
 
-int receive_sync (int type)
-{
-    return receive_command(type, 1);
-}
-
 int connect_to_wifi (char* ssid, char* password, int link_id)
 {
     // share tx_buffer, we assume we connect to the internet first
@@ -130,17 +140,16 @@ int connect_to_wifi (char* ssid, char* password, int link_id)
     return ret;
 }
 
-int bind (char* ip_address, int port_dest, int* port_src, int* link_id)
+int bind (const char* ip_address, int port_dest, int* port_src, int* link_id)
 {
-    // get first available link_id from capsule (successWithValue)
-
+    int ret;
     if (tx_buffer != NULL) {
         return TOCK_EALREADY;
     } else {
         tx_buffer = (uint8_t*) calloc (64, sizeof(uint_fast8_t));
         if (tx_buffer != NULL) {
             tx_buffer_len = 64;
-            int ret = esp_allow(tx_buffer, 1, 64);
+            ret = esp_allow(tx_buffer, 1, 64);
             if (ret != TOCK_SUCCESS) return ret;
         } else {
             return TOCK_FAIL;
@@ -154,18 +163,19 @@ int bind (char* ip_address, int port_dest, int* port_src, int* link_id)
         user_buffer = (uint8_t*) calloc (64, sizeof(uint_fast8_t));
         if (rx_buffer != NULL) {
             rx_buffer_len = 64;
-            int ret = esp_allow(rx_buffer, 2, 64);
+            ret = esp_allow(rx_buffer, 2, 64);
             if (ret != TOCK_SUCCESS) return ret;
         } else {
             return TOCK_FAIL;
         }
     }
 
+    // get first available link_id from capsule (successWithValue)
     *link_id = esp_command(LINK_ID_COMMAND_NUMBER, 0, 0); 
     // send CIPMUX=1 command to enable multiple connections
     memset(tx_buffer, 0, 64);
     snprintf((char*) tx_buffer, 14, "%s\r\n", CONNECTION_TYPE_COMMAND);
-    int ret = send_command(BIND_COMMAND_NUMBER, 0, *link_id);
+    ret = send_command(BIND_COMMAND_NUMBER, 0, *link_id);
 
     if (ret == TOCK_SUCCESS) {
         // send CIPSTART_COMMAND
@@ -175,7 +185,7 @@ int bind (char* ip_address, int port_dest, int* port_src, int* link_id)
         }
         snprintf((char*) tx_buffer, 35 + strlen(ip_address), "%s%d,\"UDP\",\"%s\",%d,%d\r\n", START_COMMAND, *link_id, ip_address, port_dest, *port_src);
         // still dunno what we're waiting for here?
-        int ret = send_command(BIND_COMMAND_NUMBER, 0, *link_id);
+        ret = send_command(BIND_COMMAND_NUMBER, 0, *link_id);
         if (ret == 0) {
             return receive_command(0, 0);
         }
@@ -183,7 +193,7 @@ int bind (char* ip_address, int port_dest, int* port_src, int* link_id)
     return ret;
 }
 
-int send_UDP_payload (size_t len, char* str, int link_id)
+int send_UDP_payload (size_t len, const char* str, int link_id)
 {
     memset(tx_buffer, 0, 64);
     // save the payload and send the command
