@@ -186,7 +186,16 @@ int receive_command (int wait_yield)
 // }
 
 
-/*
+/* bind() is the function that connects the device to the internet. First
+ * it asks the capsule for the first link id available (the capsule supports
+ * multiple connections). After that, it send the actual command to connect.
+ *
+ * As arguments, there are:
+ *      - the destination IP saved as a const char*
+ *      - the destination port
+ *      - the source port (for the host) - if it is 0, it will be assigned a
+ *        random value
+ *      - the link_id, whose value will be given from the capsule
  */
 int bind (const char* ip_address, int port_dest, int* port_src, int* link_id)
 {
