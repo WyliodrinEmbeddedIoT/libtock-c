@@ -11,7 +11,7 @@
 #include <timer.h>
 
 static void esp_event (char* buffer, int len) {
-    printf("am primit buffer in userspace de lungime %d - %s\n", len, buffer);
+    printf("Received %d characters from kernel - %s\n", len, buffer);
 }
 
 int main(void) {
