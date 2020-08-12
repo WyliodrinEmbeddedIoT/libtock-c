@@ -112,9 +112,6 @@ int send_command (int command_num, int link_id)
     cbret.error = esp_command(command_num, strlen((char*)tx_buffer), link_id);
     // wait for the callback to be called
     if (cbret.error == TOCK_SUCCESS) yield_for(&cbret.done);
-    // printf("yield done\r\n");
-    // unsubscribe the callback
-    // esp_subscribe (NULL, NULL, 1);
     // return the syscall return info
     return cbret.error;
 }
@@ -142,16 +139,6 @@ int receive_command (int wait_yield)
     if (wait_yield) {
         yield_for (&cbret.done);
     }
-
-    // if (cbret.error == TOCK_SUCCESS) {
-    //     // are we waiting for some special string? (like ip_address)
-    //     if (type) {
-    //         // get ip and save it in rx_buffer
-    //         return 0;
-    //         // else - we wait for data in rx_buffer, we check rx_buffer then
-    //     } else return check_response();
-    //     // else we were waiting for confirmation (OK, EROOR, etc);
-    // } else 
     return cbret.error;
 }
 
