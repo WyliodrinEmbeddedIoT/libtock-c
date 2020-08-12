@@ -15,7 +15,6 @@ static void esp_event (char* buffer, int len) {
 }
 
 int main(void) {
-  // connect_to_wifi("salut", "parola");
   subscribe_user_callback(esp_event, NULL);
   int portSrc = 2399;
   int linkId;
