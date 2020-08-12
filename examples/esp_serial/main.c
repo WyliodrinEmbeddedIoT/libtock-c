@@ -11,7 +11,7 @@
 #include <timer.h>
 
 static void esp_event (char* buffer, int len) {
-  printf("am primit buffer in userspace de lungime %d - %s\n", len, buffer);
+    printf("am primit buffer in userspace de lungime %d - %s\n", len, buffer);
 }
 
 int main(void) {
@@ -28,6 +28,6 @@ int main(void) {
   // delay_ms(1000);
   // fake_receive();
   // close_socket();
-  // get_esp_ip();
+  get_esp_ip();
   return 0;
 }

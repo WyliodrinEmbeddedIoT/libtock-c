@@ -1,7 +1,6 @@
 #include "esp_serial.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdio.h>
 
 // Callback Struct Type
 typedef struct {
@@ -113,6 +112,7 @@ int send_command (int command_num, int link_id)
     cbret.error = esp_command(command_num, strlen((char*)tx_buffer), link_id);
     // wait for the callback to be called
     if (cbret.error == TOCK_SUCCESS) yield_for(&cbret.done);
+    // printf("yield done\r\n");
     // unsubscribe the callback
     // esp_subscribe (NULL, NULL, 1);
     // return the syscall return info
