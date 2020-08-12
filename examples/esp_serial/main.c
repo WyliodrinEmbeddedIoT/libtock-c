@@ -20,13 +20,14 @@ int main(void) {
   int portSrc = 2399;
   int linkId;
   bind("192.168.1.100", 8080, &portSrc, &linkId);
-  // delay_ms(1000);
   // send ip, port, mesaj, lungime
   // esp send_to
   send_UDP_payload(18, "salut, ce mai faci", linkId);
   // delay_ms(1000);
+  send_UDP_payload(27, "ce parere ai daca ai merge?", linkId);
+  // delay_ms(1000);
   // fake_receive();
   // close_socket();
-  
+  // get_esp_ip();
   return 0;
 }

@@ -12,13 +12,8 @@ typedef struct {
 } CallbackReturn;
 
 static user_callback *receive_buffer_callback = NULL;
-static bool connected = false;
-
-static uint8_t *tx_buffer = NULL;
-static uint8_t *rx_buffer = NULL;
-static size_t tx_buffer_len = 0;
-static size_t rx_buffer_len = 0;
-static uint8_t *user_buffer = NULL;
+static bool read_cb = false;
+static bool write_cb = false;
 
 /* write_callback() defines the callback function that will be called
  * from the kernel after an UDP payload is being sent. 
@@ -110,14 +105,16 @@ int send_command (int command_num, int link_id)
 {
     CallbackReturn cbret;
     cbret.done = false;
-    // register the write_callback to be called
-    esp_subscribe (write_callback, &cbret, 1);
+    if (!write_cb) {
+        // register the write_callback to be called
+        esp_subscribe (write_callback, &cbret, 1);
+    }
     // execute command
     cbret.error = esp_command(command_num, strlen((char*)tx_buffer), link_id);
     // wait for the callback to be called
     if (cbret.error == TOCK_SUCCESS) yield_for(&cbret.done);
     // unsubscribe the callback
-    esp_subscribe (NULL, NULL, 1);
+    // esp_subscribe (NULL, NULL, 1);
     // return the syscall return info
     return cbret.error;
 }
@@ -137,7 +134,10 @@ int receive_command (int wait_yield)
     CallbackReturn cbret;
     cbret.done = false;
     // subscribe the read callback
-    esp_subscribe (read_callback, &cbret, 2);
+    if (!read_cb) {
+        esp_subscribe (read_callback, &cbret, 2);
+        read_cb = true;
+    }
     // wait for the callback to be called if necessary
     if (wait_yield) {
         yield_for (&cbret.done);
@@ -252,7 +252,7 @@ int send_UDP_payload (size_t len, const char* str, int link_id)
 int get_esp_ip (void)
 {
     memset(tx_buffer, 0, 64);
-    snprintf((char*) tx_buffer, 11, "%s\r\n", GET_IP_COMMAND);
+    snprintf((char*) tx_buffer, 13, "%s\r\n", GET_IP_COMMAND);
     int ret = send_command (GENERAL_COMMAND_NUMBER, 0);
     if (ret == TOCK_SUCCESS) {
         return receive_command(1);
