@@ -13,7 +13,7 @@ extern "C" {
 
 #define DRIVER_HD44780_NUM 0x80005
 
-int hd44780_begin(void);
+int hd44780_init(uint8_t len);
 
 int hd44780_clear(void);
 int hd44780_home(void);
@@ -33,7 +33,7 @@ int hd44780_autoscroll(void);
 int hd44780_no_autoscroll(void);
 int hd44780_set_cursor(uint8_t line, uint8_t position);
 
-uint8_t hd44780_print_string(char* str);
+uint8_t hd44780_print_string(const char* str);
 uint8_t hd44780_print_full_string(char* str);
 
 #ifdef __cplusplus

@@ -16,6 +16,10 @@ static void nop(
   void* d __attribute__((unused))) {}
 
 int main(void) {
-  putnstr_async(hello, sizeof(hello), nop, NULL);
+  int n = 0;
+  while (n < 40) {
+    putnstr_async(hello, sizeof(hello), nop, NULL);
+    n++;
+  }
   return 0;
 }

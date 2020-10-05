@@ -1,34 +1,46 @@
 #include "gpio.h"
 #include "hd44780.h"
+#include "text_screen.h"
 #include "tock.h"
 
 #define ALLOW_BAD_VALUE 200
 
-/*
- * hd44780_start is the first function to be called and initializes the
- * functioning parameters and communication parameters of the LCD, according
- * to its datasheet (HD44780).
+// #define WIDTH 16
+// #define HEIGHT 2
+
+// #define LCD_CLEARDISPLAY 0x01
+// #define LCD_DISPLAYON 0x04
+// #define LCD_BLINKON 0x01
+// #define LCD_CURSORON 0x02
+// #define LCD_CURSORSHIFT 0x10
+// #define LCD_DISPLAYMOVE 0x08
+// #define LCD_ENTRYLEFT 0x02
+// #define LCD_ENTRYSHIFTINCREMENT 0x01
+// #define LCD_MOVELEFT 0x00
+// #define LCD_MOVERIGHT 0x04
+
+/* hd44780_init initializes the communication between the userspace and the
+ * screen driver
+ * 
+ * As argument, there is the length of the buffer through which is sent the
+ * data to be written on the LCD display is sent.
  *
  * Example:
- *  hd44780_begin(void);
- *
+ *  hd44780_init(8);
  */
-int hd44780_begin(void)
+int hd44780_init(uint8_t len)
 {
-  int ret = command(DRIVER_HD44780_NUM, 0, 16, 1);
-  if (ret)
-    return TOCK_EBUSY;
-  return command(DRIVER_HD44780_NUM, 0, 16, 2);
+  return text_screen_init(len);
 }
 
-/* hd44780_clear clears the display and sets the cursor posiziton to zero
+/* hd44780_clear clears the display and sets the cursor position to zero
  *
  * Example:
  *  hd44780_clear(void);
  */
 int hd44780_clear(void)
 {
-  return command(DRIVER_HD44780_NUM, 3, 0, 0);
+  return text_clear_screen();
 }
 
 /* hd44780_home, as hd44780_clear, clears the display and sets the cursor posiziton to zero
@@ -38,7 +50,7 @@ int hd44780_clear(void)
  */
 int hd44780_home(void)
 {
-  return command(DRIVER_HD44780_NUM, 2, 0, 0);
+  return text_home();
 }
 
 /* hd44780_no_display turns the display off very quickly
@@ -48,7 +60,7 @@ int hd44780_home(void)
  */
 int hd44780_no_display(void)
 {
-  return command(DRIVER_HD44780_NUM, 7, 1, 0);
+  return text_display_off();
 }
 
 /* hd44780_display turns the display on very quickly
@@ -58,7 +70,7 @@ int hd44780_no_display(void)
  */
 int hd44780_display(void)
 {
-  return command(DRIVER_HD44780_NUM, 7, 0, 0);
+  return text_display_on();
 }
 
 /* hd44780_no_blink turns off the blinking cursor display
@@ -68,7 +80,7 @@ int hd44780_display(void)
  */
 int hd44780_no_blink(void)
 {
-  return command(DRIVER_HD44780_NUM, 8, 1, 0);
+  return text_blink_off();
 }
 
 /* hd44780_blink turns on the blinking cursor display
@@ -78,7 +90,7 @@ int hd44780_no_blink(void)
  */
 int hd44780_blink(void)
 {
-  return command(DRIVER_HD44780_NUM, 8, 0, 0);
+  return text_blink_on();
 }
 
 /* hd44780_no_cursor turns off the underline cursor
@@ -88,7 +100,7 @@ int hd44780_blink(void)
  */
 int hd44780_no_cursor(void)
 {
-  return command(DRIVER_HD44780_NUM, 6, 1, 0);
+  return text_hide_cursor();
 }
 
 /* hd44780_cursor turns on the underline cursor
@@ -98,7 +110,7 @@ int hd44780_no_cursor(void)
  */
 int hd44780_cursor(void)
 {
-  return command(DRIVER_HD44780_NUM, 6, 0, 0);
+  return text_show_cursor();
 }
 
 /* hd44780_scroll_display_left scrolls the display to the left without
@@ -109,7 +121,8 @@ int hd44780_cursor(void)
  */
 int hd44780_scroll_display_left(void)
 {
-  return command(DRIVER_HD44780_NUM, 9, 0, 0);
+  return -1;
+  // return screen_driver_command(3, 0, LCD_CURSORSHIFT | LCD_DISPLAYMOVE | LCD_MOVELEFT);
 }
 
 /* hd44780_scroll_display_right scrolls the display to the right without
@@ -120,7 +133,8 @@ int hd44780_scroll_display_left(void)
  */
 int hd44780_scroll_display_right(void)
 {
-  return command(DRIVER_HD44780_NUM, 9, 1, 0);
+  return -1;
+  // return screen_driver_command(3, 0, LCD_CURSORSHIFT | LCD_DISPLAYMOVE | LCD_MOVERIGHT);
 }
 
 /* hd44780_left_to_right should flow the text from left to right on the display
@@ -130,7 +144,8 @@ int hd44780_scroll_display_right(void)
  */
 int hd44780_left_to_right(void)
 {
-  return command(DRIVER_HD44780_NUM, 4, 0, 0);
+  return -1;
+  // return screen_driver_command(1, 0, LCD_ENTRYLEFT);
 }
 
 /* hd44780_right_to_left should flow the text from right to left on the display
@@ -140,7 +155,8 @@ int hd44780_left_to_right(void)
  */
 int hd44780_right_to_left(void)
 {
-  return command(DRIVER_HD44780_NUM, 4, 1, 0);
+  return -1;
+  // return screen_driver_command(1, 1, LCD_ENTRYLEFT);
 }
 
 /* hd44780_autoscroll will 'right justify' the text from the cursor
@@ -150,7 +166,8 @@ int hd44780_right_to_left(void)
  */
 int hd44780_autoscroll(void)
 {
-  return command(DRIVER_HD44780_NUM, 5, 0, 0);
+  return -1;
+  // return screen_driver_command(1, 0, LCD_ENTRYSHIFTINCREMENT);
 }
 
 /* hd44780_no_autoscroll will 'left justify' the text from the cursor
@@ -160,7 +177,8 @@ int hd44780_autoscroll(void)
  */
 int hd44780_no_autoscroll(void)
 {
-  return command(DRIVER_HD44780_NUM, 5, 1, 0);
+  return -1;
+  // return screen_driver_command(1, 1, LCD_ENTRYSHIFTINCREMENT);
 }
 
 /* hd44780_print_full_string will do some checks for the number of bytes to
@@ -176,16 +194,19 @@ int hd44780_no_autoscroll(void)
 uint8_t hd44780_print_full_string(char* string)
 {
   char buff[128];
+  uint8_t* buffer = text_buffer();
   uint8_t len = strlen(string);
   uint8_t n   = 0;
   while (n < len) {
     uint8_t to_write = ((uint8_t) sizeof(buff) > len - n) ? len - n : (uint8_t) sizeof(buff);
-    memcpy(buff, string, to_write);
-    int ret = allow(DRIVER_HD44780_NUM, 0, (void* )buff, to_write);
+    memcpy(buffer, string, to_write);
+    int ret = text_write(to_write);
+    // int ret = allow(DRIVER_HD44780_NUM, 0, (void* )buff, to_write);
     if (ret == ALLOW_BAD_VALUE) {
       while (ret == ALLOW_BAD_VALUE) {
         delay_ms(1000);
-        ret = allow(DRIVER_HD44780_NUM, 0, (void* )buff, to_write);
+        ret = text_write(to_write);
+        // ret = allow(DRIVER_HD44780_NUM, 0, (void* )buff, to_write);
       }
     }
     n      += ret;
@@ -202,15 +223,17 @@ uint8_t hd44780_print_full_string(char* string)
  * Example:
  *	hd44780_print_string("Here I am!");
  */
-uint8_t hd44780_print_string(char* string)
+uint8_t hd44780_print_string(const char* string)
 {
   char buff[128];
+  uint8_t* buffer = text_buffer();
   uint8_t len = strlen(string);
   uint8_t n   = 0;
   while (n < len) {
     uint8_t to_write = ((uint8_t) sizeof(buff) > len - n) ? len - n : (uint8_t) sizeof(buff);
-    memcpy(buff, string, to_write);
-    int ret = allow(DRIVER_HD44780_NUM, 0, (void* )buff, to_write);
+    memcpy(buffer, string, to_write);
+    int ret = text_write(to_write);
+    // int ret = allow(DRIVER_HD44780_NUM, 0, (void* )buff, to_write);
     if (!ret || ret == ALLOW_BAD_VALUE) return n;
     n      += ret;
     string += ret;
@@ -230,5 +253,5 @@ uint8_t hd44780_print_string(char* string)
 
 int hd44780_set_cursor(uint8_t col, uint8_t row)
 {
-  return command(DRIVER_HD44780_NUM, 1, col, row);
+  return text_set_cursor(col, row);
 }
