@@ -19,7 +19,7 @@ int main(void) {
     size_t bits = screen_get_bits_per_pixel (screen_get_supported_pixel_format (idx));
     printf ("  %d bpp\n", bits);
   }
-  if (screen_init (BUFFER_SIZE) == TOCK_SUCCESS) {
+  if (screen_init (BUFFER_SIZE) == 128) {
     printf ("screen init\n");
     screen_set_brightness (100);
     screen_set_frame (0, 0, 128, 160);

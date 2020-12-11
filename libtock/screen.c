@@ -32,7 +32,7 @@ static int screen_command (int command_num, int data1, int data2) {
 }
 
 static int screen_allow (void* ptr, size_t size) {
-  return allow(DRIVER_NUM_SCREEN, 0, ptr, size);
+  return allow_readonly (DRIVER_NUM_SCREEN, 0, ptr, size);
 }
 
 int screen_get_supported_resolutions (void) {
@@ -41,7 +41,8 @@ int screen_get_supported_resolutions (void) {
   fbr.done  = false;
   screen_subscribe (screen_callback, &fbr);
   fbr.error = screen_command (11, 0, 0);
-  if (fbr.error == TOCK_SUCCESS) yield_for (&fbr.done);
+  printf ("%d\n", fbr.error);
+  if (fbr.error == 128) yield_for (&fbr.done);
   return fbr.data1;
 }
 int screen_get_supported_resolution (size_t index, size_t *width, size_t *height) {
@@ -49,7 +50,7 @@ int screen_get_supported_resolution (size_t index, size_t *width, size_t *height
   fbr.done = false;
   screen_subscribe (screen_callback, &fbr);
   fbr.error = screen_command (12, index, 0);
-  if (fbr.error == TOCK_SUCCESS) yield_for (&fbr.done);
+  if (fbr.error == 128) yield_for (&fbr.done);
   *width  = fbr.data1;
   *height = fbr.data2;
   return fbr.error;
@@ -60,7 +61,7 @@ int screen_get_supported_pixel_formats (void) {
   fbr.done  = false;
   screen_subscribe (screen_callback, &fbr);
   fbr.error = screen_command (13, 0, 0);
-  if (fbr.error == TOCK_SUCCESS) yield_for (&fbr.done);
+  if (fbr.error == 128) yield_for (&fbr.done);
   return fbr.data1;
 }
 int screen_get_supported_pixel_format (size_t index) {
@@ -69,7 +70,7 @@ int screen_get_supported_pixel_format (size_t index) {
   fbr.done  = false;
   screen_subscribe (screen_callback, &fbr);
   fbr.error = screen_command (14, index, 0);
-  if (fbr.error == TOCK_SUCCESS) yield_for (&fbr.done);
+  if (fbr.error == 128) yield_for (&fbr.done);
   return fbr.data1;
 }
 
@@ -82,7 +83,7 @@ int screen_set_brightness (size_t brightness) {
   fbr.done = false;
   screen_subscribe (screen_callback, &fbr);
   fbr.error = screen_command (3, brightness, 0);
-  if (fbr.error == TOCK_SUCCESS) yield_for (&fbr.done);
+  if (fbr.error == 128) yield_for (&fbr.done);
   return fbr.error;
 }
 
@@ -91,7 +92,7 @@ int screen_invert_on (void) {
   fbr.done = false;
   screen_subscribe (screen_callback, &fbr);
   fbr.error = screen_command (4, 0, 0);
-  if (fbr.error == TOCK_SUCCESS) yield_for (&fbr.done);
+  if (fbr.error == 128) yield_for (&fbr.done);
   return fbr.error;
 }
 
@@ -100,20 +101,20 @@ int screen_invert_off (void) {
   fbr.done = false;
   screen_subscribe (screen_callback, &fbr);
   fbr.error = screen_command (5, 0, 0);
-  if (fbr.error == TOCK_SUCCESS) yield_for (&fbr.done);
+  if (fbr.error == 128) yield_for (&fbr.done);
   return fbr.error;
 }
 
 int screen_init (size_t len)
 {
-  int r = TOCK_SUCCESS;
+  int r = 128;
   if (buffer != NULL) {
     r = TOCK_EALREADY;
   }else {
     buffer = (uint8_t*)malloc (len);
     if (buffer != NULL) {
       buffer_len = len;
-      r = screen_allow (buffer, len);
+      screen_allow (buffer, len);
     }else {
       r = TOCK_FAIL;
     }
@@ -131,7 +132,7 @@ int screen_get_resolution (size_t *width, size_t *height) {
   fbr.done = false;
   screen_subscribe (screen_callback, &fbr);
   fbr.error = screen_command (23, 0, 0);
-  if (fbr.error == TOCK_SUCCESS) yield_for (&fbr.done);
+  if (fbr.error == 128) yield_for (&fbr.done);
   *width  = fbr.data1;
   *height = fbr.data2;
   return fbr.error;
@@ -142,7 +143,7 @@ int screen_set_resolution (size_t width, size_t height) {
   fbr.done = false;
   screen_subscribe (screen_callback, &fbr);
   fbr.error = screen_command (24, width, height);
-  if (fbr.error == TOCK_SUCCESS) yield_for (&fbr.done);
+  if (fbr.error == 128) yield_for (&fbr.done);
   return fbr.error;
 }
 
@@ -175,7 +176,7 @@ int screen_get_pixel_format (void) {
   fbr.done  = false;
   screen_subscribe (screen_callback, &fbr);
   fbr.error = screen_command (25, 0, 0);
-  if (fbr.error == TOCK_SUCCESS) yield_for (&fbr.done);
+  if (fbr.error == 128) yield_for (&fbr.done);
   return fbr.data1;
 }
 
@@ -184,7 +185,7 @@ int screen_set_pixel_format (size_t format) {
   fbr.done = false;
   screen_subscribe (screen_callback, &fbr);
   fbr.error = screen_command (26, format, 0);
-  if (fbr.error == TOCK_SUCCESS) yield_for (&fbr.done);
+  if (fbr.error == 128) yield_for (&fbr.done);
   return fbr.error;
 }
 
@@ -194,7 +195,7 @@ int screen_get_rotation (void) {
   fbr.done  = false;
   screen_subscribe (screen_callback, &fbr);
   fbr.error = screen_command (21, 0, 0);
-  if (fbr.error == TOCK_SUCCESS) yield_for (&fbr.done);
+  if (fbr.error == 128) yield_for (&fbr.done);
   return fbr.data1;
 }
 
@@ -203,13 +204,13 @@ int screen_set_rotation (size_t rotation) {
   fbr.done = false;
   screen_subscribe (screen_callback, &fbr);
   fbr.error = screen_command (22, rotation, 0);
-  if (fbr.error == TOCK_SUCCESS) yield_for (&fbr.done);
+  if (fbr.error == 128) yield_for (&fbr.done);
   return fbr.error;
 }
 
 int screen_set_color (size_t position, size_t color) {
   // TODO color mode
-  int r = TOCK_SUCCESS;
+  int r = 128;
   if (position < buffer_len - 2) {
     buffer[position * 2]     = (color >> 8) & 0xFF;
     buffer[position * 2 + 1] = color & 0xFF;
@@ -225,7 +226,7 @@ int screen_set_frame (uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
   screen_subscribe (screen_callback, &fbr);
   fbr.error = screen_command (100, ((x & 0xFFFF) << 16) | ((y & 0xFFFF)),
                               ((width & 0xFFFF) << 16) | ((height & 0xFFFF)));
-  if (fbr.error == TOCK_SUCCESS) yield_for (&fbr.done);
+  if (fbr.error == 128) yield_for (&fbr.done);
   return fbr.error;
 }
 
@@ -233,10 +234,10 @@ int screen_fill (size_t color) {
   ScreenReturn fbr;
   fbr.done  = false;
   fbr.error = screen_set_color (0, color);
-  if (fbr.error == TOCK_SUCCESS) {
+  if (fbr.error == 128) {
     screen_subscribe (screen_callback, &fbr);
     fbr.error = screen_command (300, 0, 0);
-    if (fbr.error == TOCK_SUCCESS) yield_for (&fbr.done);
+    if (fbr.error == 128) yield_for (&fbr.done);
   }
   return fbr.error;
 }
@@ -246,6 +247,6 @@ int screen_write (size_t length) {
   fbr.done = false;
   screen_subscribe (screen_callback, &fbr);
   fbr.error = screen_command (200, length, 0);
-  if (fbr.error == TOCK_SUCCESS) yield_for (&fbr.done);
+  if (fbr.error == 128) yield_for (&fbr.done);
   return fbr.error;
 }
