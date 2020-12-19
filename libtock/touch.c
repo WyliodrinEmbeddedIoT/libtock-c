@@ -30,6 +30,22 @@ static void touch_gesture_callback (int gesture, int data1 __attribute__((unused
   if (gesture_cb) gesture_cb (gesture, ud);
 }
 
+int single_touch_enable (void) {
+  return touch_command (1, 0, 0);
+}
+
+int single_touch_disable (void) {
+  return touch_command (2, 0, 0);
+}
+
+int multi_touch_enable (void) {
+  return touch_command (11, 0, 0);
+}
+
+int multi_touch_disable (void) {
+  return touch_command (12, 0, 0);
+}
+
 int get_number_of_touches (void) {
   return touch_command(100, 0, 0);
 }

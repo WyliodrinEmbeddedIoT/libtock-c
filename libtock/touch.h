@@ -30,6 +30,12 @@ typedef void (gesture_callback)(int, void*);
 
 int get_number_of_touches (void);
 
+int single_touch_enable (void);
+int single_touch_disable (void);
+
+int multi_touch_enable (void);
+int multi_touch_disable (void);
+
 int single_touch_set_callback (touch_callback cb, void* ud);
 int multi_touch_set_callback (touch_callback cb, void* ud, int max_touches);
 int gesture_set_callback (gesture_callback cb, void* ud);

@@ -24,6 +24,15 @@ static void tocuh_event (int status, int x, int y, void *ud __attribute__ ((unus
 }
 
 int main(void) {
-  single_touch_set_callback (tocuh_event, NULL);
+  printf ("Toches: %d\n", get_number_of_touches());
+  if (get_number_of_touches () > 0)
+  {
+    // single_touch_enable ();
+    single_touch_set_callback (tocuh_event, NULL);
+  }
+  else
+  {
+    printf ("Touch panel is not set up\n");
+  }
   return 0;
 }
