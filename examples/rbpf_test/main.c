@@ -12,7 +12,7 @@ int main(void)
   	printf("Success!!");
   } else {
   	printf("Fails.. :( !!");
-    return tock_error_to_rcode (res.data[0]);
+    return tock_status_to_returncode (res.data[0]);
   }
   // printf("command_command: %d us; command_subscribe: %d us\r\n", command_command, command_subscribe);
   return 0;
