@@ -33,8 +33,11 @@ static int text_screen_command (int command_num, int data1, int data2) {
   return tock_command_return_novalue_to_returncode(cval);
 }
 
-static int text_screen_allow (void* ptr, size_t size) {
+static int text_screen_allow (const void* ptr, size_t size) {
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
   allow_ro_return_t aval = allow_readonly(DRIVER_NUM_TEXT_SCREEN, 0, ptr, size);
+  #pragma GCC diagnostic pop
   return tock_allow_ro_return_to_returncode(aval);
 }
 
