@@ -6,9 +6,11 @@ void show_rainbow( unsigned int count);
 
 
 int main(void) {
+    delay_ms(10);
     show_rainbow(30);
     delay_ms(100);
     led_rgb_off();
+     return 0;
 }
 
 
