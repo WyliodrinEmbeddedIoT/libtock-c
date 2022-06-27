@@ -6,6 +6,20 @@ extern "C"
  {
 #endif
 
+enum StationStatus {
+    // the device is not a station
+    // it might be an access point
+    Off,
+    // the station is connected to the `Network`
+    Connected,
+    // the station is in the process of connecting to the `Network`
+    Connecting,
+    // the station is not connected to any network
+    Disconnected,
+    // the station is disconnecting from a network
+    Disconnecting
+};
+
 typedef struct __attribute__((__packed__)) {
     unsigned char ssid[33];
     unsigned char rssi;
@@ -30,6 +44,8 @@ wifi_networks_t * wifi_allocate_networks_buffer(size_t len);
 void wifi_free_networks_buffer(wifi_networks_t *networks_buffer[]);
 
 wifi_networks_t *wifi_scan_sync(size_t max_len, int *status);
+
+int connect_to_network(char* ssid, char *psk, subscribe_upcall connect_callback);
     
 #ifdef __cplusplus
 }

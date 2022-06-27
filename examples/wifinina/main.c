@@ -1,6 +1,20 @@
 #include <stdio.h>
 #include <timer.h>
+#include <string.h>
 #include "wifinina.h"
+
+char *ssid = "Valex";
+char *psk = "iubescpepsi69";
+
+static void connect_to_network_cb(int status, int arg1, int arg2) {
+    if (status == Connected) {
+        printf("Connected to SSID: %s succesfully!\n", ssid);
+    } else if (status == Disconnected) {
+        printf("Connecting to %s failed!\n", ssid);
+    } else {
+        printf("Connection failed! Other status: %d\n", status);
+    }
+}
 
 static void scan_networks_cb(int status, int len, int max_len, void *ud)
 {
@@ -11,6 +25,10 @@ static void scan_networks_cb(int status, int len, int max_len, void *ud)
         for (int i = 0; i < len; i++)
         {
             printf("%s\n", networks_buffer->networks[i].ssid);
+            if (strcmp(networks_buffer->networks[i].ssid, ssid) == 0) {
+                printf("^ ----Found the wifi!----");
+                connect_to_network(ssid, psk, connect_to_network_cb);
+            }
         }
     }
     else
