@@ -16,6 +16,8 @@ int clear_digits(void);
 
 int print_dot(int position);
 
+int print_pattern(int position, int pattern);
+
 #ifdef __cplusplus
 }
 #endif

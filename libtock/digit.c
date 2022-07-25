@@ -19,3 +19,8 @@ int print_dot(int position) {
     syscall_return_t rval = command(DRIVER_NUM_DIGITS, 3, position, 0);
     return tock_command_return_novalue_to_returncode(rval);
 }
+
+int print_pattern(int position, int pattern) {
+    syscall_return_t rval = command(DRIVER_NUM_DIGITS, 4, position, pattern);
+    return tock_command_return_novalue_to_returncode(rval);
+}
