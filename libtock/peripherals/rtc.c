@@ -1,5 +1,7 @@
 #include "rtc.h"
 
+#include "syscalls/rtc_syscalls.h"
+
 // DateTime codifies Date structure into two u32 (int) numbers
 //     date: first number (year, month, day_of_the_month):
 //            - last 5 bits store the day_of_the_month
@@ -11,14 +13,14 @@
 //            - previous 5 store the hour
 //            - previous 3 store the day_of_the_week
 static void rtc_convert_args_to_date(uint32_t date, uint32_t time, libtock_rtc_date_t* out) {
-  out->year  = date % (1 << 21) / (1 << 9);
-  out->month = date % (1 << 9) / (1 << 5);
-  out->day   = date % (1 << 5);
+  out->year  = (date >> 9) & 0xFFF;
+  out->month = (date >> 5) & 0xF;
+  out->day   = date & 0x1F;
 
-  out->day_of_week = time % (1 << 20) / (1 << 17);
-  out->hour        = time % (1 << 17) / (1 << 12);
-  out->minute      = time % (1 << 12) / (1 << 6);
-  out->seconds     = time % (1 << 6);
+  out->day_of_week = (time >> 17) & 0x7;
+  out->hour        = (time >> 12) & 0x1F;
+  out->minute      = (time >> 6) & 0x3F;
+  out->seconds     = time & 0x3F;
 }
 
 static void rtc_date_cb(int   status,
@@ -29,7 +31,7 @@ static void rtc_date_cb(int   status,
   libtock_rtc_date_t rtc_date;
 
   rtc_convert_args_to_date((uint32_t) date, (uint32_t) time, &rtc_date);
-  cb(status, rtc_date);
+  cb(tock_status_to_returncode(status), rtc_date);
 }
 
 static void rtc_set_cb(int                          status,
@@ -37,7 +39,11 @@ static void rtc_set_cb(int                          status,
                        __attribute__ ((unused)) int arg2,
                        void*                        opaque) {
   libtock_rtc_callback_done cb = (libtock_rtc_callback_done) opaque;
-  cb(status);
+  cb(tock_status_to_returncode(status));
+}
+
+bool libtock_rtc_exists(void) {
+  return libtock_rtc_driver_exists();
 }
 
 returncode_t libtock_rtc_get_date(libtock_rtc_callback_date cb) {
@@ -51,9 +57,8 @@ returncode_t libtock_rtc_get_date(libtock_rtc_callback_date cb) {
 }
 
 returncode_t libtock_rtc_set_date(libtock_rtc_date_t* set_date, libtock_rtc_callback_done cb) {
-  uint32_t date = set_date->year * (1 << 9) + set_date->month * (1 << 5) + set_date->day;
-  uint32_t time = set_date->day_of_week *
-                  (1 << 17) + set_date->hour * (1 << 12) + set_date->minute * (1 << 6) + set_date->seconds;
+  uint32_t date = (set_date->year << 9) | (set_date->month << 5) | set_date->day;
+  uint32_t time = (set_date->day_of_week << 17) | (set_date->hour << 12) | (set_date->minute << 6) | set_date->seconds;
 
   returncode_t ret;
 

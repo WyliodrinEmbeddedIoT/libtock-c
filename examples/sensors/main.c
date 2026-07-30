@@ -1,3 +1,4 @@
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
 
@@ -10,7 +11,6 @@
 #include <libtock-sync/sensors/sound_pressure.h>
 #include <libtock-sync/sensors/temperature.h>
 #include <libtock-sync/services/alarm.h>
-#include <libtock/tock.h>
 
 static libtock_alarm_t alarm;
 static bool light          = false;
@@ -27,10 +27,10 @@ static bool rainfall       = false;
 static void alarm_cb(__attribute__ ((unused)) uint32_t now,
                      __attribute__ ((unused)) uint32_t scheduled,
                      __attribute__ ((unused)) void*    opaque) {
-  int lite = 0;
-  int temp = 0;
-  int humi = 0;
-  int mois = 0;
+  int lite      = 0;
+  int temp      = 0;
+  int humi      = 0;
+  int mois      = 0;
   uint32_t rain = 0;
   int ninedof_accel_x = 0, ninedof_accel_y = 0, ninedof_accel_z = 0;
   int ninedof_magneto_x = 0, ninedof_magneto_y = 0, ninedof_magneto_z = 0;
@@ -59,7 +59,7 @@ static void alarm_cb(__attribute__ ((unused)) uint32_t now,
   if (proximity)      printf("Proximity:                   %u\n", prox_reading);
   if (sound_pressure) printf("Sound Pressure:              %u\n", sound_pressure_reading);
   if (moisture)       printf("Moisture:                    %d%%\n", mois/100);
-  if (rainfall)       printf("Rainfall:                    %lumm\n", rain / 1000);
+  if (rainfall)       printf("Rainfall:                    %" PRIu32 "mm\n", rain / 1000);
 
   /* *INDENT-ON* */
 
@@ -72,14 +72,14 @@ int main(void) {
   printf("[Sensors] All available sensors on the platform will be sampled.\n");
 
   /* *INDENT-OFF* */
-  light          = libtock_ambient_light_exists();
-  temperature    = libtock_temperature_exists();
-  humidity       = libtock_humidity_exists();
-  ninedof        = libtock_ninedof_exists();
-  proximity      = libtock_proximity_exists();
-  sound_pressure = libtock_sound_pressure_exists();
-  moisture       = libtock_moisture_exists();
-  rainfall       = libtock_rainfall_exists();
+  light          = libtocksync_ambient_light_exists();
+  temperature    = libtocksync_temperature_exists();
+  humidity       = libtocksync_humidity_exists();
+  ninedof        = libtocksync_ninedof_exists();
+  proximity      = libtocksync_proximity_exists();
+  sound_pressure = libtocksync_sound_pressure_exists();
+  moisture       = libtocksync_moisture_exists();
+  rainfall       = libtocksync_rainfall_exists();
   /* *INDENT-ON* */
 
   if (ninedof) {
@@ -103,7 +103,7 @@ int main(void) {
   /* *INDENT-ON* */
 
   if (sound_pressure) {
-    libtock_sound_pressure_command_enable();
+    libtocksync_sound_pressure_enable();
   }
 
   // Setup periodic alarm to sample the sensors.

@@ -1,11 +1,13 @@
 #pragma once
 
-#include <libtock/peripherals/crc.h>
+#include <libtock/peripherals/crc_types.h>
 #include <libtock/tock.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+bool libtocksync_crc_exists(void);
 
 // Compute a CRC.
 //

@@ -8,13 +8,13 @@
 
 static int getch(void) {
   uint8_t buffer[1];
-  int number_read;
+  uint32_t number_read;
   libtocksync_console_read(buffer, 1, &number_read);
   return buffer[0];
 }
 
 static int putnstr(const char* str, int len) {
-  int number_written;
+  uint32_t number_written;
   libtocksync_console_read((uint8_t*) str, len, &number_written);
   return number_written;
 }
@@ -30,7 +30,6 @@ static int get_number(void) {
     if (c == RETURNCODE_FAIL) {
       printf("\ngetch() failed!\n");
       return 0;
-
     } else {
       char in = c;
 
@@ -39,7 +38,6 @@ static int get_number(void) {
 
         // On a newline go ahead and parse the buffer and return the number.
         return atoi(buffer);
-
       } else if ((in >= 48 && in <= 57) || in == 45) {
         // If this is a valid number record it
         buffer[idx] = in;

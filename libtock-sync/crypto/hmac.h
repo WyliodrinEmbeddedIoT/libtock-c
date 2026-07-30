@@ -1,11 +1,16 @@
 #pragma once
 
-#include <libtock/crypto/hmac.h>
+#include <libtock/crypto/hmac_types.h>
 #include <libtock/tock.h>
+
+#include "syscalls/hmac_syscalls.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+
+bool libtocksync_hmac_exists(void);
 
 // Compute an HMAC on the given buffer.
 returncode_t libtocksync_hmac_simple(libtock_hmac_algorithm_t hmac_type,

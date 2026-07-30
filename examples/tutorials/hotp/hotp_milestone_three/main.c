@@ -12,6 +12,7 @@
 #include <stdio.h>
 
 // Libtock includes
+#include <libtock-sync/interface/button.h>
 #include <libtock-sync/services/alarm.h>
 #include <libtock/interface/button.h>
 
@@ -78,20 +79,18 @@ int main(void) {
     // Delay and check if button is still pressed, signalling a "hold"
     libtocksync_alarm_delay_ms(500);
     int new_val = 0;
-    libtock_button_read(btn_num, &new_val);
+    libtocksync_button_read(btn_num, &new_val);
 
     // Handle long presses (program new secret)
     if (new_val) {
       program_new_secret(&stored_keys[btn_num]);
       save_key(&stored_keys[btn_num], btn_num);
       display_hotp_keys(stored_keys, NUM_KEYS);
-
     } else if (btn_num < NUM_KEYS && stored_keys[btn_num].len > 0) {
       // Handle short presses on already configured keys (output next code).
       get_next_code(&stored_keys[btn_num], key_digits[btn_num]);
       save_key(&stored_keys[btn_num], btn_num);
       display_hotp_keys(stored_keys, NUM_KEYS);
-
     } else if (stored_keys[btn_num].len == 0) {
       // Error for short press on a non-configured key.
       printf("HOTP / TOTP slot %d not yet configured.\r\n", btn_num);

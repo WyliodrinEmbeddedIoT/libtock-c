@@ -1,43 +1,11 @@
 #pragma once
 
 #include "../tock.h"
-#include "syscalls/rtc_syscalls.h"
+#include "rtc_types.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#define JANUARY 1
-#define FEBRUARY 2
-#define MARCH 3
-#define APRIL 4
-#define MAY 5
-#define JUNE 6
-#define JULY 7
-#define AUGUST 8
-#define SEPTEMBER 9
-#define OCTOBER 10
-#define NOVEMBER 11
-#define DECEMBER 12
-
-#define SUNDAY 0
-#define MONDAY 1
-#define TUESDAY 2
-#define WENSDAY 3
-#define THURSDAY 4
-#define FRIDAY 5
-#define SATURDAY 6
-
-// Date structure to store date and time
-typedef struct {
-  int year;
-  int month;
-  int day;
-  int day_of_week;
-  int hour;
-  int minute;
-  int seconds;
-} libtock_rtc_date_t;
 
 // Function signature for get date callbacks.
 //
@@ -50,6 +18,9 @@ typedef void (*libtock_rtc_callback_date)(returncode_t, libtock_rtc_date_t);
 // - `arg1` (`returncode_t`): Returncode indicating status.
 typedef void (*libtock_rtc_callback_done)(returncode_t);
 
+
+// Check if the driver exists.
+bool libtock_rtc_exists(void);
 
 // Get the current date.
 //

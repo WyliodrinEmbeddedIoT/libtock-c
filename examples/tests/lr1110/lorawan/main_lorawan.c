@@ -59,12 +59,12 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include <lr1110/lr1110.h>
+#include <lr1110/us_915_ttn.h>
+
 #include <libtock-sync/sensors/humidity.h>
 #include <libtock-sync/sensors/temperature.h>
 #include <libtock-sync/services/alarm.h>
-
-#include <lr1110/lr1110.h>
-#include <lr1110/us_915_ttn.h>
 
 /*
  * -----------------------------------------------------------------------------
@@ -282,7 +282,6 @@ int main(void) {
 
     /* go in low power */
     hal_mcu_set_sleep_for_ms(sleep_time_ms);
-
   }
 }
 
@@ -336,8 +335,8 @@ static void on_modem_alarm(void) {
 
   printf("[Sensors] Sampling Temperature and Humidity sensors once.\n");
 
-  bool temperature_available = driver_exists(DRIVER_NUM_TEMPERATURE);
-  bool humidity_available    = driver_exists(DRIVER_NUM_HUMIDITY);
+  bool temperature_available = libtocksync_temperature_exists();
+  bool humidity_available    = libtocksync_temperature_exists();
   int temp = 0;
   int humi = 0;
   if (temperature_available) {

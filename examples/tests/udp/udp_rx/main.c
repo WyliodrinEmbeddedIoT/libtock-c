@@ -2,12 +2,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <libtock-sync/net/ieee802154.h>
 #include <libtock-sync/services/alarm.h>
 #include <libtock/interface/led.h>
-#include <libtock/net/udp.h>
-
-#include <libtock-sync/net/ieee802154.h>
 #include <libtock/net/ieee802154.h>
+#include <libtock/net/syscalls/ieee802154_syscalls.h>
+#include <libtock/net/syscalls/udp_syscalls.h>
 #include <libtock/net/udp.h>
 
 /*
@@ -32,10 +32,9 @@ void print_ipv6(ipv6_addr_t* ipv6_addr) {
   printf("%02x%02x", ipv6_addr->addr[14], ipv6_addr->addr[15]);
 }
 
-static void callback(statuscode_t status,
+static void callback(returncode_t ret,
                      int          payload_len) {
 
-  returncode_t ret = tock_status_to_returncode(status);
   if (ret != RETURNCODE_SUCCESS) {
     printf("Error in receiving packet: %d\n", ret);
     return;
@@ -117,5 +116,4 @@ int main(void) {
   } else {
     printf("Socket closed.\n");
   }
-
 }

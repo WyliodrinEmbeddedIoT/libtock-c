@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../tock.h"
+#include "sha_types.h"
 #include "syscalls/sha_syscalls.h"
 
 #ifdef __cplusplus
@@ -12,13 +13,14 @@ extern "C" {
 // - `arg1` (`returncode_t`): Status from computing the hash.
 typedef void (*libtock_sha_callback_hash)(returncode_t);
 
-typedef enum {
-  LIBTOCK_SHA256 = 0,
-  LIBTOCK_SHA384 = 1,
-  LIBTOCK_SHA512 = 2,
-} libtock_sha_algorithm_t;
+// Function signature for SHA verify callback.
+//
+// - `arg1` (`returncode_t`): Status from verifying the hash.
+// - `arg1` (`bool`): Whether the hash matched.
+typedef void (*libtock_sha_callback_verify)(returncode_t, bool);
 
 
+bool libtock_sha_exists(void);
 
 // Compute a SHA hash over `input_buffer` and store the hash in `hash_buffer`.
 //

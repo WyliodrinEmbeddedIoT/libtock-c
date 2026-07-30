@@ -2,8 +2,10 @@
 
 #include "ieee802154.h"
 
-bool libtock_ieee802154_driver_exists(void) {
-  return driver_exists(DRIVER_NUM_IEEE802154);
+#include "syscalls/ieee802154_syscalls.h"
+
+bool libtock_ieee802154_exists(void) {
+  return libtock_ieee802154_driver_exists();
 }
 
 // Temporary buffer used for some commands where the system call interface
@@ -332,7 +334,7 @@ static void tx_done_upcall(int                          status,
                            __attribute__ ((unused)) int unused2,
                            void*                        opaque) {
   libtock_ieee802154_callback_send_done cb = (libtock_ieee802154_callback_send_done) opaque;
-  cb(status, acked);
+  cb(tock_status_to_returncode(status), acked);
 }
 
 returncode_t libtock_ieee802154_send(uint32_t                              addr,

@@ -1,12 +1,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <libtock-sync/services/alarm.h>
-#include <libtock/kernel/ipc.h>
-
 #include <libtock-sync/sensors/ambient_light.h>
 #include <libtock-sync/sensors/humidity.h>
 #include <libtock-sync/sensors/temperature.h>
+#include <libtock-sync/services/alarm.h>
+#include <libtock/kernel/ipc.h>
 
 size_t _svc_num = 0;
 
@@ -46,7 +45,7 @@ static void do_sensing_cb(__attribute__ ((unused)) uint32_t now,
   int temp  = 0;
   int humi  = 0;
 
-  if (driver_exists(DRIVER_NUM_AMBIENT_LIGHT)) {
+  if (libtocksync_ambient_light_exists()) {
     libtocksync_ambient_light_read_intensity(&light);
 
     update->type  = SENSOR_IRRADIANCE;
@@ -56,7 +55,7 @@ static void do_sensing_cb(__attribute__ ((unused)) uint32_t now,
     yield_for(&_ipc_done);
   }
 
-  if (driver_exists(DRIVER_NUM_TEMPERATURE)) {
+  if (libtocksync_temperature_exists()) {
     libtocksync_temperature_read(&temp);
 
     update->type  = SENSOR_TEMPERATURE;
@@ -66,7 +65,7 @@ static void do_sensing_cb(__attribute__ ((unused)) uint32_t now,
     yield_for(&_ipc_done);
   }
 
-  if (driver_exists(DRIVER_NUM_HUMIDITY)) {
+  if (libtocksync_humidity_exists()) {
     libtocksync_humidity_read(&humi);
 
     update->type  = SENSOR_HUMIDITY;
@@ -85,7 +84,6 @@ static void do_sensing_cb(__attribute__ ((unused)) uint32_t now,
 }
 
 
-
 int main(void) {
   int err = ipc_discover("org.tockos.services.ble-ess", &_svc_num);
   if (err < 0) {
@@ -93,7 +91,7 @@ int main(void) {
     return -1;
   }
 
-  printf("Found BLE ESS service (%u)\n", _svc_num);
+  printf("Found BLE ESS service (%zu)\n", _svc_num);
 
   libtocksync_alarm_delay_ms(1500);
 

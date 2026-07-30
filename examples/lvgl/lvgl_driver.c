@@ -1,8 +1,9 @@
+#include <lvgl/lvgl.h>
+
 #include <libtock-sync/display/screen.h>
 #include <libtock/sensors/touch.h>
 #include <libtock/services/alarm.h>
 #include <libtock/tock.h>
-#include <lvgl/lvgl.h>
 
 #include "lvgl_driver.h"
 
@@ -31,7 +32,7 @@ static void screen_lvgl_driver(lv_display_t* disp, const lv_area_t* area,
   lv_display_flush_ready(disp);           /* Indicate you are ready with the flushing*/
 }
 
-static void touch_event(int status, uint16_t x, uint16_t y) {
+static void touch_event(libtock_touch_status_t status, uint16_t x, uint16_t y) {
   touch_status = status;
   touch_x      = x;
   touch_y      = y;
@@ -57,12 +58,12 @@ static uint32_t tick_cb(void) {
 
 int lvgl_driver_init(int buffer_lines) {
   uint32_t width, height;
-  int error = libtock_screen_get_resolution(&width, &height);
+  int error = libtocksync_screen_get_resolution(&width, &height);
   if (error != RETURNCODE_SUCCESS) return error;
 
   uint32_t buffer_size = width * buffer_lines * PIXEL_SIZE;
   uint8_t* buffer      = NULL;
-  error = libtock_screen_buffer_init(buffer_size, &buffer);
+  error = libtocksync_screen_buffer_init(buffer_size, &buffer);
   if (error != RETURNCODE_SUCCESS) return error;
 
   /* initialize littlevgl */

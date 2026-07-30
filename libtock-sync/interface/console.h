@@ -7,9 +7,11 @@
 extern "C" {
 #endif
 
-returncode_t libtocksync_console_write(const uint8_t* buffer, uint32_t length, int* written);
+bool libtocksync_console_exists(void);
 
-returncode_t libtocksync_console_read(uint8_t* buffer, uint32_t length, int* read);
+returncode_t libtocksync_console_write(const uint8_t* buffer, uint32_t length, uint32_t* written);
+
+returncode_t libtocksync_console_read(uint8_t* buffer, uint32_t length, uint32_t* read);
 
 #ifdef __cplusplus
 }

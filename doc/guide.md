@@ -170,13 +170,13 @@ There must be a function to check for syscall driver existence.
 Signature:
 
 ```
-bool libtock_[name]_exists(void);
+bool libtock_[name]_driver_exists(void);
 ```
 
 Example:
 
 ```c
-bool libtock_[name]_exists(void) {
+bool libtock_[name]_driver_exists(void) {
   return driver_exists(DRIVER_NUM_[NAME]);
 }
 ```
@@ -188,11 +188,12 @@ All common system call operations should have asynchronous versions.
 
 These asynchronous APIs must not use or include any internal/global state.
 
-| Characteristic   | Value                         |
-|------------------|-------------------------------|
-| Location         | `libtock/[category]`          |
-| Source File Name | `libtock/[category]/[name].c` |
-| Header File Name | `libtock/[category]/[name].h` |
+| Characteristic                    | Value                               |
+|-----------------------------------|-------------------------------------|
+| Location                          | `libtock/[category]`                |
+| Source File Name                  | `libtock/[category]/[name].c`       |
+| Header File Name                  | `libtock/[category]/[name].h`       |
+| Types Header File Name (Optional) | `libtock/[category]/[name]_types.h` |
 
 ### Header Files
 
@@ -202,7 +203,6 @@ The `[name].h` header file must look like:
 #pragma once
 
 #include "../tock.h"
-#include "syscalls/[name]_syscalls.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -215,7 +215,8 @@ extern "C" {
 #endif
 ```
 
-The `[name].h` header file must include the syscalls header.
+The `[name].h` header file must NOT include the syscalls header. Applications
+wanting to use the syscalls directly must include the syscalls header.
 
 ### Defining a Callback for Asynchronous Operations
 
@@ -236,6 +237,24 @@ they should have the last argument be a callback function pointer.
 returncode_t libtock_[name]_[desc](<arguments>, libtock_[name]_callback_[desc] cb);
 ```
 
+#### Exists
+
+There must be a function to check for syscall driver existence.
+
+Signature:
+
+```
+bool libtock_[name]_exists(void);
+```
+
+Example:
+
+```c
+bool libtock_[name]_exists(void) {
+  return libtock_[name]_driver_exists();
+}
+```
+
 ### Example:
 
 
@@ -251,12 +270,12 @@ typedef void (*libtock_sensor_callback_reading)(returncode_t, int);
 Define a upcall function to be passed to the kernel:
 
 ```c
-static void sensor_temp_upcall(int                          ret,
+static void sensor_temp_upcall(int                          status,
                                int                          val,
                                __attribute__ ((unused)) int unused0,
                                void*                        opaque) {
   libtock_sensor_callback_reading cb = (libtock_sensor_callback_reading) opaque;
-  cb(ret, val);
+  cb(tock_status_to_returncode((statuscode_t) status), val);
 }
 ```
 
@@ -274,6 +293,13 @@ returncode_t libtock_sensor_read(libtock_sensor_callback_reading cb) {
   return ret;
 }
 ```
+
+### Types Header
+
+If there are any additional types, beyond the callback signature, that are
+exposed in the public API of the driver they must be included in the
+`libtock/[category]/[name]_types.h` file. This makes it possible to include
+these types from `libtock-sync` implementations.
 
 ## Synchronous APIs
 
@@ -309,7 +335,6 @@ file is used in a C++ app.
 #pragma once
 
 #include <libtock/tock.h>
-#include <libtock/[category]/syscalls/[name]_syscalls.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -349,12 +374,15 @@ the function.
 
 ```c
 returncode_t libtocksync_[name]_yield_wait_for(int* value) {
-  yield_waitfor_return_t ret;
-  ret = yield_wait_for(DRIVER_NUM_[NAME], 0);
-  if (ret.data0 != RETURNCODE_SUCCESS) return ret.data0;
+  returncode_t ret;
+  yield_waitfor_return_t ywf;
 
-  *value = (int) ret.data1;
-  return RETURNCODE_SUCCESS;
+  ywf = yield_wait_for(DRIVER_NUM_[NAME], 0);
+  ret = tock_status_to_returncode(ywf.data0);
+  if (ret != RETURNCODE_SUCCESS) return ret;
+
+  *value = (int) ywf.data1;
+  return ret;
 }
 ```
 
@@ -376,7 +404,6 @@ The libtock-sync `[name].h` header file must look like:
 ```c
 #pragma once
 
-#include "syscalls/temperature_syscalls.h"
 #include <libtock/tock.h>
 
 #ifdef __cplusplus
@@ -400,13 +427,60 @@ space for the sync operation:
 #include "syscalls/temperature_syscalls.h"
 
 returncode_t libtocksync_sensor_read(int* val) {
-  returncode_t err;
+  returncode_t ret;
 
-  err = libtock_sensor_command_read();
-  if (err != RETURNCODE_SUCCESS) return err;
+  ret = libtock_sensor_command_read();
+  if (ret != RETURNCODE_SUCCESS) return ret;
 
   // Wait for the operation to finish.
-  err = libtock_temperature_yield_wait_for(val);
-  return err;
+  ret = libtock_temperature_yield_wait_for(val);
+  return ret;
+}
+```
+
+### More Complicated Example:
+
+Drivers that use allow buffers must un-allow the buffers after the operation
+finishes. To ease authoring of cleanup code, Tock provides a macro-based
+implementation of the `defer {}` feature that will be included with a future
+version of `C`.
+
+```c
+#include <libtock/defer.h>
+
+#include "digest.h"
+#include "syscalls/digest_syscalls.h"
+
+returncode_t libtocksync_digest_compute(uint8_t* input_buffer,
+                                        uint32_t input_buffer_len,
+                                        uint8_t* output_buffer,
+                                        uint32_t output_buffer_len) {
+  returncode_t ret;
+
+  // First allow for input. If it fails, return.
+  ret = libtock_digest_set_readonly_allow(input_buffer, input_buffer_len);
+  if (ret != RETURNCODE_SUCCESS) return ret;
+  // Now that this buffer has been allowed, set up a `defer` block to
+  // ensure that it will be unallowed before this function returns
+  // (regardless of exit location out of the function).
+  //
+  // Note the return value of this "un-allow" operation is ignored in favor
+  // of returning the disposition of the library function (i.e., `ret`).
+  defer { libtock_digest_set_readonly_allow(NULL, 0); }
+
+  // Second allow for output.
+  ret = libtock_digest_set_readwrite_allow(output_buffer, output_buffer_len);
+  if (ret != RETURNCODE_SUCCESS) return ret;
+  // Set up the output unallow.
+  defer { libtock_digest_set_readwrite_allow(NULL, 0); }
+
+  // Attempt the command. If it fails, unallow both buffers.
+  ret = libtock_digest_command_compute_digest();
+  if (err != RETURNCODE_SUCCESS) return ret;
+
+  // Wait for the digest to compute.
+  ret = libtock_digest_yield_wait_for(val);
+
+  return ret;
 }
 ```

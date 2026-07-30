@@ -1,32 +1,17 @@
 #include "humidity.h"
 
-typedef struct {
-  int humidity;
-  returncode_t ret;
-  bool fired;
-} humidity_result_t;
+#include "syscalls/humidity_syscalls.h"
 
-static humidity_result_t result = {.fired = false};
-
-// callback for synchronous reads
-static void humidity_callback(returncode_t ret, int humidity) {
-  result.humidity = humidity;
-  result.ret      = ret;
-  result.fired    = true;
+bool libtocksync_humidity_exists(void) {
+  return libtock_humidity_driver_exists();
 }
 
 returncode_t libtocksync_humidity_read(int* humidity) {
   returncode_t err;
 
-  result.fired = false;
-
-  err = libtock_humidity_read(humidity_callback);
+  err = libtock_humidity_command_read();
   if (err != RETURNCODE_SUCCESS) return err;
 
-  yield_for(&result.fired);
-  if (result.ret != RETURNCODE_SUCCESS) return result.ret;
-
-  *humidity = result.humidity;
-
-  return RETURNCODE_SUCCESS;
+  err = libtocksync_humidity_yield_wait_for(humidity);
+  return err;
 }

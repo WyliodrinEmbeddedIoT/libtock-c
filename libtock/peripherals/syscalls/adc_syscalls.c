@@ -1,11 +1,11 @@
 #include "adc_syscalls.h"
 
-bool libtock_adc_exists(void) {
+bool libtock_adc_driver_exists(void) {
   return driver_exists(DRIVER_NUM_ADC);
 }
 
 returncode_t libtock_adc_set_upcall(subscribe_upcall callback, void* opaque) {
-  subscribe_return_t sval = subscribe(DRIVER_NUM_ADC, 0, callback, opaque);
+  subscribe_return_t sval = subscribe(DRIVER_NUM_ADC, 1, callback, opaque);
   return tock_subscribe_return_to_returncode(sval);
 }
 

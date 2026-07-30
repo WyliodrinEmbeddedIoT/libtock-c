@@ -20,8 +20,9 @@ let
   tockloader = import (pkgs.fetchFromGitHub {
     owner = "tock";
     repo = "tockloader";
-    rev = "v1.13.0";
-    sha256 = "sha256-NRcCPTrLFZLubI5KzMmDkKJdvCdbnW97JMZSmedAQ8s=";
+    # v1.16.0-25-ga865b6f (including nrfutil backend)
+    rev = "a865b6f93f63b2af377546e8ad5c85b0a1fd53d1";
+    sha256 = "sha256-bgA86FBa/va0kAXe4hn3wgBSidHY2GPmjYoatNmJd7I=";
   }) { inherit pkgs withUnfreePkgs; };
 
   elf2tab = pkgs.rustPlatform.buildRustPackage rec {
@@ -45,13 +46,13 @@ let
   # The formatting scripts require a specific version of uncrustify:
   uncrustify-0_75_1 = stdenv.mkDerivation rec {
     pname = "uncrustify";
-    version = "0.75.1";
+    version = "0.81.0";
 
     src = pkgs.fetchFromGitHub {
       owner = "uncrustify";
       repo = "uncrustify";
       rev = "uncrustify-${version}";
-      sha256 = "sha256-wLzj/KcqXlcTsOJo7T166jLcWi1KNLmgblIqqkj7/9c=";
+      sha256 = "sha256-8KTsrXUYOfqsWSGBAl0mZpGOYr+duFrRB0ITmq2Auqg=";
     };
 
     nativeBuildInputs = with pkgs; [
@@ -67,7 +68,7 @@ in
     buildInputs = with pkgs; [
       elf2tab
       gcc-arm-embedded
-      python3Full
+      python3
       tockloader
       pkgsCross.riscv32-embedded.buildPackages.gcc
       unzip

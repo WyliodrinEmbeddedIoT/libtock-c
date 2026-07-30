@@ -1,11 +1,12 @@
 #pragma once
 
-#include <libtock/display/text_screen.h>
 #include <libtock/tock.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+bool libtocksync_text_screen_exists(void);
 
 returncode_t libtocksync_text_screen_display_on(void);
 

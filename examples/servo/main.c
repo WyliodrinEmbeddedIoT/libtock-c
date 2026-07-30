@@ -1,19 +1,21 @@
-#include "../../libtock/interface/syscalls/servo_syscalls.h"
-#include <libtock-sync/services/alarm.h>
-#include <libtock/tock.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <libtock-sync/services/alarm.h>
+#include <libtock/interface/syscalls/servo_syscalls.h>
+
+
 int main(void) {
   // Checks if the driver exists and, if not, returns -1.
-  if (!libtock_servo_exists()) {
+  if (!libtock_servo_driver_exists()) {
     printf("There is no available servo\n");
     return -1;
   }
   returncode_t result  = RETURNCODE_EOFF;
   uint32_t servo_count = 0;
   libtock_servo_count(&servo_count);
-  printf("The number of available servomotors is: %ld\n", servo_count);
+  printf("The number of available servomotors is: %" PRIu32 "\n", servo_count);
   uint16_t angle = 0;
   uint16_t index = 0; // the first index available.
 

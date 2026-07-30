@@ -2,6 +2,8 @@
 
 #include "screen.h"
 
+#include "syscalls/screen_syscalls.h"
+
 static void screen_callback_done(int                          status,
                                  __attribute__ ((unused)) int data1,
                                  __attribute__ ((unused)) int data2,
@@ -26,6 +28,9 @@ static void screen_callback_rotation(int                          status,
   cb(tock_status_to_returncode(status), (libtock_screen_rotation_t) data1);
 }
 
+bool libtock_screen_exists(void) {
+  return libtock_screen_driver_exists();
+}
 
 statuscode_t libtock_screen_buffer_init(size_t len, uint8_t** buffer) {
   if (*buffer != NULL) return TOCK_STATUSCODE_ALREADY;
@@ -57,7 +62,6 @@ int libtock_screen_get_bits_per_pixel(libtock_screen_format_t format) {
       return 0;
   }
 }
-
 
 
 returncode_t libtock_screen_get_supported_resolutions(uint32_t* resolutions) {
@@ -119,7 +123,6 @@ returncode_t libtock_screen_invert_off(libtock_screen_callback_done cb) {
 }
 
 
-
 returncode_t libtock_screen_get_resolution(uint32_t* width, uint32_t* height) {
   return libtock_screen_command_get_resolution(width, height);
 }
@@ -133,7 +136,6 @@ returncode_t libtock_screen_set_resolution(uint32_t width, uint32_t height, libt
   ret = libtock_screen_command_set_resolution(width, height);
   return ret;
 }
-
 
 
 returncode_t libtock_screen_get_pixel_format(libtock_screen_callback_format cb) {
@@ -176,7 +178,6 @@ returncode_t libtock_screen_set_rotation(libtock_screen_rotation_t rotation, lib
   ret = libtock_screen_command_set_rotation((uint32_t) rotation);
   return ret;
 }
-
 
 
 returncode_t libtock_screen_set_frame(uint16_t x, uint16_t y, uint16_t width, uint16_t height,

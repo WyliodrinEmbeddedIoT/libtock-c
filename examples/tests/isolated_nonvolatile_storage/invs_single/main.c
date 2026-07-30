@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include <libtock-sync/storage/isolated_nonvolatile_storage.h>
+#include <libtock/storage/syscalls/isolated_nonvolatile_storage_syscalls.h>
 
 
 
@@ -52,7 +53,6 @@ static uint64_t get_region_size(void) {
   libtocksync_isolated_nonvolatile_storage_get_number_bytes(&num_bytes);
   return num_bytes;
 }
-
 
 
 static bool test_exists(void) {
@@ -245,7 +245,6 @@ static bool test_write_fail_notwithinregion(void) {
 
   return true;
 }
-
 
 
 int main(void) {

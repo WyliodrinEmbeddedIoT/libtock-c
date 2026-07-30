@@ -1,7 +1,7 @@
+#include <inttypes.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#include <math.h>
 #include <string.h>
 
 #include <libtock-sync/services/alarm.h>
@@ -11,11 +11,10 @@
 #include <libtock/kernel/process_info.h>
 
 // These have to be included before mui.h
-#include <u8g2-tock.h>
-#include <u8g2.h>
-
 #include <mui.h>
 #include <mui_u8g2.h>
+#include <u8g2-tock.h>
+#include <u8g2.h>
 
 u8g2_t u8g2;
 mui_t ui;
@@ -120,7 +119,7 @@ static uint16_t process_menu_get_item_count(void* data) {
   UNUSED(data);
 
   uint32_t count;
-  libtock_process_info_command_get_process_count(&count);
+  libtock_process_info_get_process_count(&count);
   return count + 1; // +1 for back
 }
 
@@ -201,7 +200,7 @@ static const char*details_get_str(void* data, uint16_t index) {
 
       uint32_t* pids = (uint32_t*) buf;
       uint32_t pid   = pids[selection];
-      snprintf(process_names[index], 50, MUI_100 "PID: %lu", pid);
+      snprintf(process_names[index], 50, MUI_100 "PID: %" PRIu32, pid);
       break;
     }
     case 1: {
@@ -213,27 +212,26 @@ static const char*details_get_str(void* data, uint16_t index) {
 
       if (shortid == 0) {
         snprintf(process_names[index], 50, MUI_100 "ShortID: Unique");
-
       } else {
         char zeros[10];
         insert_zeros(zeros, 10, 8 - hex_digits(shortid));
-        snprintf(process_names[index], 50, MUI_100 "ShortID: 0x%s%lx", zeros, shortid);
+        snprintf(process_names[index], 50, MUI_100 "ShortID: 0x%s%" PRIu32 "x", zeros, shortid);
       }
       break;
     }
     case 2: {
       uint32_t timeslices_expired = get_stat(selection, 0);
-      snprintf(process_names[index], 50, MUI_100 "Timeslices Exp: %lu", timeslices_expired);
+      snprintf(process_names[index], 50, MUI_100 "Timeslices Exp: %" PRIu32, timeslices_expired);
       break;
     }
     case 3: {
       uint32_t syscall_count = get_stat(selection, 1);
-      snprintf(process_names[index], 50, MUI_100 "Syscall Count: %lu", syscall_count);
+      snprintf(process_names[index], 50, MUI_100 "Syscall Count: %" PRIu32, syscall_count);
       break;
     }
     case 4: {
       uint32_t restart_count = get_stat(selection, 2);
-      snprintf(process_names[index], 50, MUI_100 "Restart Count: %lu", restart_count);
+      snprintf(process_names[index], 50, MUI_100 "Restart Count: %" PRIu32, restart_count);
       break;
     }
     case 5: {
@@ -361,7 +359,6 @@ static const char* binaries_get_str(void* data, uint16_t index) {
   }
 
   return process_names[index];
-
 }
 
 static uint8_t mui_u8g2_btn_goto_load_new_app(mui_t* ui_draw, uint8_t msg) {
@@ -414,8 +411,6 @@ muif_t muif_list[] = {
   MUIF_BUTTON("CO", mui_u8g2_btn_goto_wm_fi),
 
   MUIF_BUTTON("AL", mui_u8g2_btn_goto_load_new_app),
-
-
 };
 
 fds_t* fds =

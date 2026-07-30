@@ -34,7 +34,7 @@ KERNEL_HEAP_SIZE ?= 1024
 
 # Set default required kernel version.
 KERNEL_MAJOR_VERSION     ?= 2
-KERNEL_MINOR_VERSION     ?= 0
+KERNEL_MINOR_VERSION     ?= 2
 
 # PACKAGE_NAME is used to identify the application for IPC and for error
 # reporting. This can be overwritten per-app to customize the name, otherwise we
@@ -67,28 +67,35 @@ ARTY_E21_TOCK_TARGETS := rv32imac|rv32imac.0x40430080.0x80004000|0x40430080|0x80
                          rv32imac|rv32imac.0x40440080.0x80007000|0x40440080|0x80007000
 
 # Specific addresses useful for the QEMU rv32i "virt" machine memory map.
-QEMU_RV32_VIRT_TOCK_TARGETS := rv32imac|rv32imac.0x80100080.0x80210000|0x80100080|0x80210000\
-                               rv32imac|rv32imac.0x80104080.0x80214000|0x80104080|0x80214000
+QEMU_RV32_VIRT_TOCK_TARGETS := rv32imac|rv32imac.0x80100080.0x80300000|0x80100080|0x80300000\
+                               rv32imac|rv32imac.0x80110080.0x80310000|0x80110080|0x80310000\
+                               rv32imac|rv32imac.0x80130080.0x80330000|0x80130080|0x80330000\
+                               rv32imac|rv32imac.0x80180080.0x80380000|0x80180080|0x80380000
+
+# Specific addresses useful for the ESP32-C3.
+ESP32_C3_TOCK_TARGETS := rv32imc|rv32imc.0x403B0080.0x3FCA2000|0x403B0080|0x3FCA2000\
+                         rv32imc|rv32imc.0x403C0080.0x3FCA8000|0x403C0080|0x3FCA8000\
+                         rv32imc|rv32imc.0x403D0080.0x3FCB0000|0x403D0080|0x3FCB0000
 
 VEER_EL2_TOCK_TARGETS := rv32imc|rv32imc.0x20300080.0x20602000|0x20300080|0x20602000
 
 # Include the RISC-V targets.
 #  rv32imac|rv32imac.0x20040080.0x80002800 # RISC-V for HiFive1b
-#  rv32imac|rv32imac.0x403B0080.0x3FCC0000 # RISC-V for ESP32-C3
 #  rv32imc|rv32imc.0x41000080.0x42008000   # RISC-V for LiteX Arty-A7
 #  rv32imc|rv32imc.0x00080080.0x40008000   # RISC-V for LiteX Simulator
 TOCK_TARGETS ?= cortex-m0\
                 cortex-m3\
+                cortex-m33\
                 cortex-m4\
                 cortex-m7\
                 rv32imac|rv32imac.0x20040080.0x80002800|0x20040080|0x80002800\
-                rv32imac|rv32imac.0x403B0080.0x3FCC0000|0x403B0080|0x3FCC0000\
                 rv32imc|rv32imc.0x41000080.0x42008000|0x41000080|0x42008000\
                 rv32imc|rv32imc.0x00080080.0x40008000|0x00080080|0x40008000\
                 $(OPENTITAN_TOCK_TARGETS) \
                 $(ARTY_E21_TOCK_TARGETS) \
                 $(VEER_EL2_TOCK_TARGETS) \
-                $(QEMU_RV32_VIRT_TOCK_TARGETS)
+                $(QEMU_RV32_VIRT_TOCK_TARGETS)\
+                $(ESP32_C3_TOCK_TARGETS)\
 
 # Generate `TOCK_ARCH_FAMILIES`, the set of architecture families which will be
 # used to determine toolchains to use in the build process.
@@ -222,6 +229,8 @@ override CPPFLAGS_PIC += \
 # which a compiler is found.
 ifneq (,$(shell which riscv64-none-elf-gcc 2>/dev/null))
   TOOLCHAIN_rv32 := riscv64-none-elf
+else ifneq (,$(shell which riscv-none-elf-gcc 2>/dev/null))
+  TOOLCHAIN_rv32 := riscv-none-elf
 else ifneq (,$(shell which riscv32-none-elf-gcc 2>/dev/null))
   TOOLCHAIN_rv32 := riscv32-none-elf
 else ifneq (,$(shell which riscv64-elf-gcc 2>/dev/null))
@@ -388,6 +397,7 @@ override SYSTEM_LIBS_CXX_rv32imac += \
 TOOLCHAIN_cortex-m  := arm-none-eabi
 TOOLCHAIN_cortex-m0 := $(TOOLCHAIN_cortex-m)
 TOOLCHAIN_cortex-m3 := $(TOOLCHAIN_cortex-m)
+TOOLCHAIN_cortex-m33 := $(TOOLCHAIN_cortex-m)
 TOOLCHAIN_cortex-m4 := $(TOOLCHAIN_cortex-m)
 TOOLCHAIN_cortex-m7 := $(TOOLCHAIN_cortex-m)
 
@@ -396,6 +406,7 @@ TOOLCHAIN_cortex-m7 := $(TOOLCHAIN_cortex-m)
 CC_cortex-m  := -gcc
 CC_cortex-m0 := $(CC_cortex-m)
 CC_cortex-m3 := $(CC_cortex-m)
+CC_cortex-m33 := $(CC_cortex-m)
 CC_cortex-m4 := $(CC_cortex-m)
 CC_cortex-m7 := $(CC_cortex-m)
 
@@ -423,6 +434,7 @@ endif
 NEWLIB_VERSION_cortex-m0 := $(NEWLIB_VERSION_cortex-m)
 NEWLIB_VERSION_cortex-m3 := $(NEWLIB_VERSION_cortex-m)
 NEWLIB_VERSION_cortex-m4 := $(NEWLIB_VERSION_cortex-m)
+NEWLIB_VERSION_cortex-m33 := $(NEWLIB_VERSION_cortex-m)
 NEWLIB_VERSION_cortex-m7 := $(NEWLIB_VERSION_cortex-m)
 NEWLIB_BASE_DIR_cortex-m := $(TOCK_USERLAND_BASE_DIR)/lib/libtock-newlib-$(NEWLIB_VERSION_cortex-m)
 
@@ -442,6 +454,7 @@ else
 endif
 LIBCPP_VERSION_cortex-m0 := $(LIBCPP_VERSION_cortex-m)
 LIBCPP_VERSION_cortex-m3 := $(LIBCPP_VERSION_cortex-m)
+LIBCPP_VERSION_cortex-m33 := $(LIBCPP_VERSION_cortex-m)
 LIBCPP_VERSION_cortex-m4 := $(LIBCPP_VERSION_cortex-m)
 LIBCPP_VERSION_cortex-m7 := $(LIBCPP_VERSION_cortex-m)
 LIBCPP_BASE_DIR_cortex-m := $(TOCK_USERLAND_BASE_DIR)/lib/libtock-libc++-$(LIBCPP_VERSION_cortex-m)
@@ -456,6 +469,7 @@ endif
 override CFLAGS_cortex-m  += $(CFLAGS_toolchain_cortex-m)
 override CFLAGS_cortex-m0 += $(CFLAGS_cortex-m)
 override CFLAGS_cortex-m3 += $(CFLAGS_cortex-m)
+override CFLAGS_cortex-m33 += $(CFLAGS_cortex-m)
 override CFLAGS_cortex-m4 += $(CFLAGS_cortex-m)
 override CFLAGS_cortex-m7 += $(CFLAGS_cortex-m)
 
@@ -478,6 +492,9 @@ override CPPFLAGS_cortex-m0 += $(CPPFLAGS_cortex-m) \
 
 override CPPFLAGS_cortex-m3 += $(CPPFLAGS_cortex-m) \
       -mcpu=cortex-m3
+
+override CPPFLAGS_cortex-m33 += $(CPPFLAGS_cortex-m) \
+      -mcpu=cortex-m33
 
 override CPPFLAGS_cortex-m4 += $(CPPFLAGS_cortex-m) \
       -mcpu=cortex-m4
@@ -512,6 +529,15 @@ override SYSTEM_LIBS_CXX_cortex-m4 += \
       $(LIBCPP_BASE_DIR_cortex-m)/arm/arm-none-eabi/lib/thumb/v7e-m/nofp/libsupc++.a \
       $(LIBCPP_BASE_DIR_cortex-m)/arm/lib/gcc/arm-none-eabi/$(LIBCPP_VERSION_cortex-m)/thumb/v7e-m/nofp/libgcc.a
 
+override SYSTEM_LIBS_cortex-m33 += \
+      $(NEWLIB_BASE_DIR_cortex-m)/arm/arm-none-eabi/lib/thumb/v8-m.main/nofp/libc.a \
+      $(NEWLIB_BASE_DIR_cortex-m)/arm/arm-none-eabi/lib/thumb/v8-m.main/nofp/libm.a
+
+override SYSTEM_LIBS_CXX_cortex-m33 += \
+      $(LIBCPP_BASE_DIR_cortex-m)/arm/arm-none-eabi/lib/thumb/v7e-m/nofp/libstdc++.a \
+      $(LIBCPP_BASE_DIR_cortex-m)/arm/arm-none-eabi/lib/thumb/v7e-m/nofp/libsupc++.a \
+      $(LIBCPP_BASE_DIR_cortex-m)/arm/lib/gcc/arm-none-eabi/$(LIBCPP_VERSION_cortex-m)/thumb/v7e-m/nofp/libgcc.a
+
 override SYSTEM_LIBS_cortex-m7 += \
       $(NEWLIB_BASE_DIR_cortex-m)/arm/arm-none-eabi/lib/thumb/v7e-m/nofp/libc.a \
       $(NEWLIB_BASE_DIR_cortex-m)/arm/arm-none-eabi/lib/thumb/v7e-m/nofp/libm.a
@@ -526,6 +552,7 @@ override OBJDUMP_FLAGS_cortex-m  += --disassembler-options=force-thumb
 override OBJDUMP_FLAGS_cortex-m7 += $(OBJDUMP_FLAGS_cortex-m)
 override OBJDUMP_FLAGS_cortex-m4 += $(OBJDUMP_FLAGS_cortex-m)
 override OBJDUMP_FLAGS_cortex-m3 += $(OBJDUMP_FLAGS_cortex-m)
+override OBJDUMP_FLAGS_cortex-m33 += $(OBJDUMP_FLAGS_cortex-m)
 override OBJDUMP_FLAGS_cortex-m0 += $(OBJDUMP_FLAGS_cortex-m)
 
 

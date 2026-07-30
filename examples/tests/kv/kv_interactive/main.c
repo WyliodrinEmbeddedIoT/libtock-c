@@ -4,7 +4,6 @@
 
 #include <libtock-sync/interface/console.h>
 #include <libtock-sync/storage/kv.h>
-#include <libtock/interface/console.h>
 
 #define KEY_LEN  64
 #define DATA_LEN 64
@@ -17,7 +16,7 @@ char read_buf[DATA_LEN];
 
 static int getch(void) {
   uint8_t buffer[1];
-  int number_read;
+  uint32_t number_read;
   libtocksync_console_read(buffer, 1, &number_read);
   return buffer[0];
 }
@@ -33,13 +32,11 @@ static int get_command(void) {
     if (c == RETURNCODE_FAIL) {
       printf("\ngetch() failed!\n");
       return c;
-
     } else {
       char in = c;
 
       if (in == '\n' || in == '\r') {
         return 0;
-
       } else {
         // If this is a valid number record it
         read_buf[idx] = in;
@@ -104,7 +101,6 @@ int main(void) {
         }
         printf("\n");
       }
-
     } else if (strncmp(read_buf, "set", 3) == 0) {
       int key_start   = 4;
       int key_end     = find_end(key_start);
@@ -131,7 +127,6 @@ int main(void) {
       } else {
         printf("Set key-value\n");
       }
-
     } else if (strncmp(read_buf, "add", 3) == 0) {
       int key_start   = 4;
       int key_end     = find_end(key_start);
@@ -158,7 +153,6 @@ int main(void) {
       } else {
         printf("Added key-value\n");
       }
-
     } else if (strncmp(read_buf, "update", 6) == 0) {
       int key_start   = 7;
       int key_end     = find_end(key_start);
@@ -185,7 +179,6 @@ int main(void) {
       } else {
         printf("Updated key-value\n");
       }
-
     } else if (strncmp(read_buf, "delete", 6) == 0) {
       int key_start = 7;
       int key_end   = find_end(key_start);
@@ -202,7 +195,6 @@ int main(void) {
       } else {
         printf("Deleted key\n");
       }
-
     } else {
       printf("KV: unknown command\n");
     }

@@ -1,5 +1,7 @@
 #include "adc.h"
 
+#include "syscalls/adc_syscalls.h"
+
 
 // Internal callback for routing to operation-specific callbacks
 //
@@ -44,24 +46,27 @@ static void adc_routing_upcall(int   callback_type,
 
     case libtock_adc_SingleBuffer:
       if (callbacks->buffered_sample_callback) {
-        uint8_t channel  = (uint8_t)(arg1 & 0xFF);
-        uint32_t length  = ((arg1 >> 8) & 0xFFFFFF);
-        uint16_t* buffer = (uint16_t*)arg2;
-        callbacks->buffered_sample_callback(channel, length, buffer);
+        uint8_t channel = (uint8_t)(arg1 & 0xFF);
+        uint32_t length = ((arg1 >> 8) & 0xFFFFFF);
+        callbacks->buffered_sample_callback(channel, length);
       }
       break;
 
     case libtock_adc_ContinuousBuffer:
       if (callbacks->continuous_buffered_sample_callback) {
-        uint8_t channel  = (uint8_t)(arg1 & 0xFF);
-        uint32_t length  = ((arg1 >> 8) & 0xFFFFFF);
-        uint16_t* buffer = (uint16_t*)arg2;
-        callbacks->continuous_buffered_sample_callback(channel, length, buffer);
+        uint8_t channel      = (uint8_t)(arg1 & 0xFF);
+        uint32_t length      = ((arg1 >> 8) & 0xFFFFFF);
+        uint8_t buffer_index = (uint8_t)arg2;
+        callbacks->continuous_buffered_sample_callback(channel, length, buffer_index);
       }
       break;
   }
 }
 
+
+bool libtock_adc_exists(void) {
+  return libtock_adc_driver_exists();
+}
 
 returncode_t libtock_adc_set_buffer(uint16_t* buffer, uint32_t length) {
   return libtock_adc_set_readwrite_allow_set_buffer((uint8_t*) buffer, length * 2);
@@ -69,7 +74,6 @@ returncode_t libtock_adc_set_buffer(uint16_t* buffer, uint32_t length) {
 
 returncode_t libtock_adc_set_double_buffer(uint16_t* buffer, uint32_t length) {
   return libtock_adc_set_readwrite_allow_set_double_buffer((uint8_t*) buffer, length * 2);
-
 }
 
 returncode_t libtock_adc_channel_count(int* count) {

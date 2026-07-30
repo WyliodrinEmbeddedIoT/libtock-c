@@ -1,11 +1,13 @@
 #pragma once
 
-#include <libtock/peripherals/rtc.h>
+#include <libtock/peripherals/rtc_types.h>
 #include <libtock/tock.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+bool libtocksync_rtc_exists(void);
 
 // Get the current date.
 returncode_t libtocksync_rtc_get_date(libtock_rtc_date_t* date);

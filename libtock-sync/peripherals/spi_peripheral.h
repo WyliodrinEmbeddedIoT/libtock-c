@@ -1,11 +1,12 @@
 #pragma once
 
-#include <libtock/peripherals/spi_peripheral.h>
 #include <libtock/tock.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+bool libtocksync_spi_peripheral_exists(void);
 
 // As the SPI peripheral, write a buffer of data.
 returncode_t libtocksync_spi_peripheral_write(const uint8_t* write,

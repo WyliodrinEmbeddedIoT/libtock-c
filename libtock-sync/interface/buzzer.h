@@ -1,11 +1,16 @@
 #pragma once
 
-#include <libtock/interface/buzzer.h>
+#include <libtock/interface/buzzer_types.h>
+#include <libtock/interface/syscalls/buzzer_syscalls.h>
 #include <libtock/tock.h>
+
+#include "syscalls/buzzer_syscalls.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+bool libtocksync_buzzer_exists(void);
 
 // Play a constant tone for a certain amount of time.
 //

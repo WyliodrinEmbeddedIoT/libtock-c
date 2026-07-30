@@ -10,6 +10,7 @@
 
 // C standard library includes
 #include <ctype.h>
+#include <inttypes.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -17,6 +18,7 @@
 #include <string.h>
 
 // Libtock includes
+#include <libtock-sync/interface/button.h>
 #include <libtock-sync/interface/console.h>
 #include <libtock-sync/interface/usb_keyboard_hid.h>
 #include <libtock-sync/services/alarm.h>
@@ -99,7 +101,6 @@ static int initialize_keys(void) {
       // Looks valid, copy into our local array of keys.
       memcpy(&keys[i], value, sizeof(hotp_encrypted_key_t));
     }
-
   }
 
   return RETURNCODE_SUCCESS;
@@ -154,7 +155,7 @@ static void program_new_secret(int slot_num) {
   while (i < 127) {
     // read next character
     char c;
-    int number_read, number_written;
+    uint32_t number_read, number_written;
     libtocksync_console_read((uint8_t*) &c, 1, &number_read);
 
     // break on enter
@@ -223,20 +224,20 @@ static void get_next_code_encrypted(int slot_num) {
 
   // Record value as a string
   char hotp_format_buffer[16];
-  int len = snprintf(hotp_format_buffer, 16, "%.*ld", key_digits[slot_num], S);
+  int len = snprintf(hotp_format_buffer, 16, "%.*" PRIu32, key_digits[slot_num], S);
   if (len < 0) {
     len = 0;
   } else if (len > 16) {
     len = 16;
   }
 
-  if (libtock_usb_keyboard_hid_exists()) {
+  if (libtocksync_usb_keyboard_hid_exists()) {
     // Write the value to the USB keyboard.
     int ret = libtocksync_usb_keyboard_hid_send_string(hotp_format_buffer, len);
     if (ret < 0) {
       printf("ERROR sending string with USB keyboard HID: %i\r\n", ret);
     } else {
-      printf("Counter: %u. Typed \"%s\" on the USB HID the keyboard\r\n", (size_t)keys[slot_num].counter - 1,
+      printf("Counter: %zu. Typed \"%s\" on the USB HID the keyboard\r\n", (size_t)keys[slot_num].counter - 1,
              hotp_format_buffer);
     }
   } else {
@@ -280,7 +281,7 @@ int main(void) {
     // Delay and check if button is still pressed, signalling a "hold"
     libtocksync_alarm_delay_ms(500);
     int new_val = 0;
-    libtock_button_read(btn_num, &new_val);
+    libtocksync_button_read(btn_num, &new_val);
 
     // Handle long presses (program new secret)
     if (new_val) {

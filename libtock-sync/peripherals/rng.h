@@ -1,11 +1,12 @@
 #pragma once
 
-#include <libtock/peripherals/rng.h>
 #include <libtock/tock.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+bool libtocksync_rng_exists(void);
 
 // Synchronous RNG request.
 //

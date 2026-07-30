@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../tock.h"
-#include "syscalls/gpio_syscalls.h"
+#include "gpio_types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -13,17 +13,8 @@ extern "C" {
 // - `arg2` (`bool`): If the value is high (true) or low (false).
 typedef void (*libtock_gpio_callback_interrupt)(uint32_t, bool);
 
-typedef enum {
-  libtock_pull_none=0,
-  libtock_pull_up,
-  libtock_pull_down,
-} libtock_gpio_input_mode_t;
-
-typedef enum {
-  libtock_change=0,
-  libtock_rising_edge,
-  libtock_falling_edge,
-} libtock_gpio_interrupt_mode_t;
+// Check if the driver exists.
+bool libtock_gpio_exists(void);
 
 // Returns the number of GPIO pins configured on the board.
 returncode_t libtock_gpio_count(int* count);
